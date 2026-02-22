@@ -113,7 +113,8 @@ export default function TrackingCapture() {
   <text x="0" y="32" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="32" fontWeight="700" fill="white">G</text>
   <text x="38" y="30" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="26" fontWeight="400" fill="white">Pay</text>
 </svg> */}
-<div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+
+{/* <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
   <div style={{ background: "#fff", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}>
     <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 11.5v2.5h3.5c-.15 1-.6 1.85-1.25 2.4l2 1.55C17.55 16.7 18 14.95 18 12.95c0-.5-.05-1-.13-1.45H12z" fill="#4285F4"/>
@@ -123,9 +124,20 @@ export default function TrackingCapture() {
     </svg>
   </div>
   <div style={{ color: "#fff", fontWeight: 700, fontSize: 26, letterSpacing: 0.5 }}>Pay</div>
+</div> */}
+<div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+  <span style={{ fontSize: 32, fontWeight: 900, fontFamily: "Arial, sans-serif" }}>
+    <span style={{ color: "#4285F4" }}>G</span>
+    <span style={{ color: "#EA4335" }}>o</span>
+    <span style={{ color: "#FBBC05" }}>o</span>
+    <span style={{ color: "#4285F4" }}>g</span>
+    <span style={{ color: "#34A853" }}>l</span>
+    <span style={{ color: "#EA4335" }}>e</span>
+  </span>
+  <span style={{ color: "#fff", fontWeight: 700, fontSize: 26 }}>Pay</span>
 </div>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>Lucky Winner</div>
+          <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>🎉 Lucky Winner Cash Prize</div>
         </div>
 
         {/* Amount */}
