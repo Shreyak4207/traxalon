@@ -114,7 +114,7 @@ export async function createTrackingLink(uid, label) {
     const token = generateToken();
 
     // ✅ Always use the deployed Firebase URL
-    const trackingUrl = `https://traxalon-baf10.web.app/t/${token}`;
+    const trackingUrl = `https://traxalon-main-01.vercel.app/t/${token}`;
 
     await addDoc(collection(db, "trackingLinks"), {
         uid,
