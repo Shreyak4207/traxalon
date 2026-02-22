@@ -109,10 +109,21 @@ export default function TrackingCapture() {
               alt="Google Pay"
               style={{ height: 38, filter: "brightness(0) invert(1)" }}
             /> */}
-            <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* <svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
   <text x="0" y="32" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="32" fontWeight="700" fill="white">G</text>
   <text x="38" y="30" fontFamily="'Google Sans', Roboto, sans-serif" fontSize="26" fontWeight="400" fill="white">Pay</text>
-</svg>
+</svg> */}
+<div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+  <div style={{ background: "#fff", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 11.5v2.5h3.5c-.15 1-.6 1.85-1.25 2.4l2 1.55C17.55 16.7 18 14.95 18 12.95c0-.5-.05-1-.13-1.45H12z" fill="#4285F4"/>
+      <path d="M6.3 14.69l-.45.35-1.6 1.25C5.45 17.8 7.55 19 10 19c2.7 0 4.96-1 6.6-2.55l-2-1.55c-.55.4-1.25.65-2.1.75V14.5H6.3z" fill="#34A853"/>
+      <path d="M4.25 8.71C3.95 9.45 3.77 10.2 3.77 11s.18 1.55.48 2.29l2.05-1.6C6.1 11.3 6 10.65 6 10s.1-1.3.3-1.69L4.25 8.71z" fill="#FBBC05"/>
+      <path d="M10 5c1.55 0 2.95.6 3.95 1.55l1.9-1.9C14.5 3 12.4 2 10 2 7.55 2 5.45 3.2 4.25 5.01l2.05 1.6C7.05 5.5 8.4 5 10 5z" fill="#EA4335"/>
+    </svg>
+  </div>
+  <div style={{ color: "#fff", fontWeight: 700, fontSize: 26, letterSpacing: 0.5 }}>Pay</div>
+</div>
           </div>
           <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>Lucky Winner</div>
         </div>
