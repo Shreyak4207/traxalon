@@ -125,7 +125,7 @@ export default function TrackingCapture() {
   </div>
   <div style={{ color: "#fff", fontWeight: 700, fontSize: 26, letterSpacing: 0.5 }}>Pay</div>
 </div> */}
-<div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+{/* <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
   <span style={{ fontSize: 32, fontWeight: 900, fontFamily: "Arial, sans-serif" }}>
     <span style={{ color: "#4285F4" }}>G</span>
     <span style={{ color: "#EA4335" }}>o</span>
@@ -135,6 +135,13 @@ export default function TrackingCapture() {
     <span style={{ color: "#EA4335" }}>e</span>
   </span>
   <span style={{ color: "#fff", fontWeight: 700, fontSize: 26 }}>Pay</span>
+</div> */}
+<div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+  <img
+    src="https://static0.howtogeekimages.com/wordpress/wp-content/uploads/2020/11/Google-Pay-hero.png"
+    alt="Google Pay"
+    style={{ height: 45, objectFit: "contain" }}
+  />
 </div>
           </div>
           <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>🎉 Lucky Winner Cash Prize</div>
