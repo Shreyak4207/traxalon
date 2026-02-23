@@ -16,11 +16,9 @@ export default function Admin() {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate("/");
       return;
     }
     if (currentUser.email !== ADMIN_EMAIL) {
-      navigate("/");
       return;
     }
 
