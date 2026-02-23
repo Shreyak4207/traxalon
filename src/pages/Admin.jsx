@@ -14,11 +14,13 @@ export default function Admin() {
   const [tab, setTab] = useState("users");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!currentUser) {
+      setLoading(false);
       return;
     }
     if (currentUser.email !== ADMIN_EMAIL) {
+      setLoading(false);
       return;
     }
 
