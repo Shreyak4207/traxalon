@@ -2,37 +2,39 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
-const ADMIN_EMAIL = "your@email.com"; // ← replace with your email
+const ADMIN_EMAIL = "kshreya4207@gmail.com";
 
 export default function Admin() {
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [links, setLinks] = useState([]);
   const [tab, setTab] = useState("users");
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-    if (!currentUser) {
+  useEffect(() => {
+    // Wait for auth to load
+    if (currentUser === undefined) return;
+
+    // Not logged in
+    if (currentUser === null) {
       setLoading(false);
       return;
     }
+
+    // Wrong email
     if (currentUser.email !== ADMIN_EMAIL) {
       setLoading(false);
       return;
     }
 
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setUsers(data);
+      setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
       setLoading(false);
     });
 
     const unsubLinks = onSnapshot(collection(db, "trackingLinks"), (snap) => {
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setLinks(data);
+      setLinks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
 
     return () => {
@@ -49,13 +51,20 @@ export default function Admin() {
     );
   }
 
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="text-accent font-display text-2xl">Access Denied</div>
+      </div>
+    );
+  }
+
   const totalCaptures = links.reduce((a, l) => a + (l.captures?.length || 0), 0);
   const totalClicks = links.reduce((a, l) => a + (l.clicks || 0), 0);
 
   return (
     <div className="min-h-screen bg-surface pt-16 text-text-primary">
       <div className="max-w-7xl mx-auto px-4 py-8">
-
         <h1 className="font-display text-4xl tracking-wider mb-2">
           ADMIN <span className="text-primary">PANEL</span>
         </h1>
@@ -63,7 +72,6 @@ export default function Admin() {
           Logged in as <span className="text-primary">{currentUser?.email}</span>
         </p>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total Users", value: users.length },
@@ -78,7 +86,6 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-3 mb-6">
           {["users", "links"].map((t) => (
             <button
@@ -95,7 +102,6 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* Users Tab */}
         {tab === "users" && (
           <div className="bg-surface-elevated border border-surface-border rounded-2xl overflow-x-auto">
             {users.length === 0 ? (
@@ -129,7 +135,6 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Links Tab */}
         {tab === "links" && (
           <div className="space-y-4">
             {links.length === 0 ? (
@@ -148,12 +153,10 @@ export default function Admin() {
                       {link.clicks || 0} clicks · {link.captures?.length || 0} captures
                     </div>
                   </div>
-
                   <div className="font-mono text-xs text-text-muted mb-1 break-all">{link.trackingUrl}</div>
                   <div className="font-body text-xs text-text-muted mb-3">
                     Created: {link.createdAt ? new Date(link.createdAt.toMillis()).toLocaleString("en-IN") : "-"}
                   </div>
-
                   {link.captures?.length > 0 && (
                     <div className="border-t border-surface-border pt-3 mt-3">
                       <div className="font-body text-xs text-text-secondary uppercase tracking-wider mb-3">
