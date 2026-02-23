@@ -1,4 +1,3 @@
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -6,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 
 const AuthContext = createContext();
@@ -31,25 +30,26 @@ export function AuthProvider({ children }) {
       credits: 1,
       role: "officer",
       createdAt: serverTimestamp(),
+      lastSeen: serverTimestamp(),
       totalLinksGenerated: 0,
     });
     return user;
   }
 
-  // async function login(email, password) {
-  //   return signInWithEmailAndPassword(auth, email, password);
-  // }
-
   async function login(email, password) {
     const result = await signInWithEmailAndPassword(auth, email, password);
     await updateDoc(doc(db, "users", result.user.uid), {
       lastSeen: serverTimestamp(),
-      isActive: true,
     });
     return result;
   }
 
   async function logout() {
+    if (currentUser) {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        lastSeen: serverTimestamp(),
+      });
+    }
     setUserProfile(null);
     return signOut(auth);
   }
@@ -69,6 +69,9 @@ export function AuthProvider({ children }) {
       setCurrentUser(user);
       if (user) {
         await fetchUserProfile(user.uid);
+        await updateDoc(doc(db, "users", user.uid), {
+          lastSeen: serverTimestamp(),
+        });
       }
       setLoading(false);
     });
