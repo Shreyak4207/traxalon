@@ -32,7 +32,7 @@ export default function Navbar() {
               </div>
             </div>
             <span className="font-display text-2xl text-text-primary tracking-widest">
-              TRAX<span className="text-primary">ALON</span>
+              TRAX<span className="text-primary">ELON</span>
             </span>
           </Link>
 
