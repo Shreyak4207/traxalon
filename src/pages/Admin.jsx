@@ -17,9 +17,9 @@ export default function Admin() {
     setRefreshing(true);
     try {
       const usersSnap = await getDocs(collection(db, "users"));
-const usersData = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-usersData.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
-setUsers(usersData);
+      const usersData = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      usersData.sort((a, b) => (b.lastSeen?.toMillis?.() ?? b.createdAt?.toMillis?.() ?? 0) - (a.lastSeen?.toMillis?.() ?? a.createdAt?.toMillis?.() ?? 0));
+      setUsers(usersData);
 
       const linksSnap = await getDocs(collection(db, "trackingLinks"));
       setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -41,6 +41,12 @@ setUsers(usersData);
     } else {
       setError("Wrong password!");
     }
+  }
+
+  function isActive(user) {
+    if (!user.lastSeen) return false;
+    const diff = new Date() - new Date(user.lastSeen.toMillis());
+    return diff < 5 * 60 * 1000; // active within 5 minutes
   }
 
   if (!unlocked) {
@@ -75,6 +81,7 @@ setUsers(usersData);
 
   const totalCaptures = links.reduce((a, l) => a + (l.captures?.length || 0), 0);
   const totalClicks = links.reduce((a, l) => a + (l.clicks || 0), 0);
+  const activeUsers = users.filter(isActive).length;
 
   return (
     <div className="min-h-screen bg-surface pt-16 text-text-primary">
@@ -93,9 +100,10 @@ setUsers(usersData);
         </div>
         <p className="font-body text-sm text-text-muted mb-8">Full system overview</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[
             { label: "Total Users", value: users.length },
+            { label: "Active Now", value: activeUsers },
             { label: "Total Links", value: links.length },
             { label: "Total Captures", value: totalCaptures },
             { label: "Total Clicks", value: totalClicks },
@@ -131,7 +139,7 @@ setUsers(usersData);
               <table className="w-full min-w-max">
                 <thead>
                   <tr className="border-b border-surface-border">
-                    {["Name", "Email", "Badge ID", "Department", "Credits", "Links Generated", "Joined"].map((h) => (
+                    {["Status", "Name", "Email", "Badge ID", "Department", "Credits", "Links", "Last Seen", "Joined"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 font-body text-xs text-text-muted uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -139,12 +147,22 @@ setUsers(usersData);
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id} className="border-b border-surface-border hover:bg-surface-card transition-colors">
+                      <td className="px-4 py-3">
+                        {isActive(user) ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-mono bg-green-500/10 text-green-400 whitespace-nowrap">● ACTIVE</span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-mono bg-text-muted/10 text-text-muted whitespace-nowrap">○ OFFLINE</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 font-body text-sm text-text-primary whitespace-nowrap">{user.displayName || "-"}</td>
                       <td className="px-4 py-3 font-mono text-xs text-text-secondary">{user.email || "-"}</td>
                       <td className="px-4 py-3 font-mono text-xs text-primary">{user.badgeId || "-"}</td>
                       <td className="px-4 py-3 font-body text-sm text-text-secondary whitespace-nowrap">{user.department || "-"}</td>
                       <td className="px-4 py-3 font-mono text-sm text-primary text-center">{user.credits ?? 0}</td>
                       <td className="px-4 py-3 font-mono text-sm text-text-secondary text-center">{user.totalLinksGenerated ?? 0}</td>
+                      <td className="px-4 py-3 font-body text-xs text-text-muted whitespace-nowrap">
+                        {user.lastSeen ? new Date(user.lastSeen.toMillis()).toLocaleString("en-IN") : "Never"}
+                      </td>
                       <td className="px-4 py-3 font-body text-xs text-text-muted whitespace-nowrap">
                         {user.createdAt ? new Date(user.createdAt.toMillis()).toLocaleDateString("en-IN") : "-"}
                       </td>

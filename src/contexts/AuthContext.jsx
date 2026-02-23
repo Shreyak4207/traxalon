@@ -1,3 +1,4 @@
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -35,8 +36,17 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  // async function login(email, password) {
+  //   return signInWithEmailAndPassword(auth, email, password);
+  // }
+
   async function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    await updateDoc(doc(db, "users", result.user.uid), {
+      lastSeen: serverTimestamp(),
+      isActive: true,
+    });
+    return result;
   }
 
   async function logout() {
