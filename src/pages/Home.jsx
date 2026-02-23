@@ -99,9 +99,9 @@ export default function Home() {
         <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-30 animate-scan-line pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-4 py-2 mb-8 max-w-xs mx-auto">
-            <Activity className="w-4 h-4 text-primary flex-shrink-0" />
-            <span className="font-mono text-xs text-primary tracking-wide uppercase truncate">
+          <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-5 py-2 mb-8">
+  <Activity className="w-3 h-3 text-primary flex-shrink-0" />
+  <span className="font-mono text-xs text-primary tracking-wider uppercase whitespace-nowrap">
     Law Enforcement Intelligence Tool
   </span>
 </div>
