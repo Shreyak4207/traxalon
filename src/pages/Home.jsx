@@ -99,13 +99,12 @@ export default function Home() {
         <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-30 animate-scan-line pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-4 py-2 mb-8">
-            <Activity className="w-4 h-4 text-primary" />
-            <span className="font-mono text-xs text-primary tracking-widest uppercase">
-              Law Enforcement Intelligence Tool
-            </span>
-          </div>
-
+          <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-4 py-2 mb-8 max-w-xs mx-auto">
+            <Activity className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className="font-mono text-xs text-primary tracking-wide uppercase truncate">
+    Law Enforcement Intelligence Tool
+  </span>
+</div>
           <h1 className="font-display text-7xl md:text-9xl text-text-primary leading-none mb-6 tracking-wider">
             TRACK.<br />
             <span className="text-primary" style={{ textShadow: "0 0 40px rgba(0,212,255,0.5)" }}>
