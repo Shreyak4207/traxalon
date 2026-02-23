@@ -239,4 +239,5 @@ function DataRow({ label, value }) {
       <div className="font-mono text-xs text-text-primary break-all">{value}</div>
     </div>
   );
-}
+}/ /   f o r c e   d e p l o y  
+ 
