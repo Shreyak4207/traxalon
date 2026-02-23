@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
-import { useAuth } from "../contexts/AuthContext";
 
-const ADMIN_EMAIL = "kshreya4207@gmail.com";
+const ADMIN_PASSWORD = "traxelon@admin123";
 
 export default function Admin() {
-  const { currentUser } = useAuth();
+  const [password, setPassword] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
+  const [error, setError] = useState("");
   const [users, setUsers] = useState([]);
   const [links, setLinks] = useState([]);
   const [tab, setTab] = useState("users");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentUser === null) return;
-    if (!currentUser) return;
-    if (currentUser.email !== ADMIN_EMAIL) return;
+    if (!unlocked) return;
 
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -29,20 +27,43 @@ export default function Admin() {
       unsubUsers();
       unsubLinks();
     };
-  }, [currentUser]);
+  }, [unlocked]);
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-accent font-display text-2xl">Please Login First</div>
-      </div>
-    );
+  function handleUnlock() {
+    if (password === ADMIN_PASSWORD) {
+      setUnlocked(true);
+      setError("");
+    } else {
+      setError("Wrong password!");
+    }
   }
 
-  if (currentUser.email !== ADMIN_EMAIL) {
+  if (!unlocked) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-accent font-display text-2xl">Access Denied</div>
+      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+        <div className="bg-surface-elevated border border-surface-border rounded-2xl p-8 w-full max-w-sm">
+          <h1 className="font-display text-3xl tracking-wider mb-2 text-text-primary">
+            ADMIN <span className="text-primary">ACCESS</span>
+          </h1>
+          <p className="font-body text-sm text-text-muted mb-6">Enter admin password to continue</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+            placeholder="Enter password"
+            className="w-full bg-surface border border-surface-border rounded-lg px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors mb-3"
+          />
+          {error && (
+            <p className="font-body text-xs text-accent mb-3">{error}</p>
+          )}
+          <button
+            onClick={handleUnlock}
+            className="w-full px-4 py-3 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all"
+          >
+            Unlock Admin Panel
+          </button>
+        </div>
       </div>
     );
   }
@@ -57,7 +78,7 @@ export default function Admin() {
           ADMIN <span className="text-primary">PANEL</span>
         </h1>
         <p className="font-body text-sm text-text-muted mb-8">
-          Logged in as <span className="text-primary">{currentUser?.email}</span>
+          Full system overview
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
