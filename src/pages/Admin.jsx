@@ -17,7 +17,9 @@ export default function Admin() {
     setRefreshing(true);
     try {
       const usersSnap = await getDocs(collection(db, "users"));
-      setUsers(usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+const usersData = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+usersData.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+setUsers(usersData);
 
       const linksSnap = await getDocs(collection(db, "trackingLinks"));
       setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
