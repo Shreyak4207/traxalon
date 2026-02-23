@@ -33,7 +33,7 @@ export default function App() {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin-secret" element={<Admin />} />
                   <Route
                     path="/dashboard"
                     element={
