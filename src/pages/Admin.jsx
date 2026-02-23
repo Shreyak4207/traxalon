@@ -12,21 +12,37 @@ export default function Admin() {
   const [links, setLinks] = useState([]);
   const [tab, setTab] = useState("users");
 
-  useEffect(() => {
+//   useEffect(() => {
+//     if (!unlocked) return;
+
+//     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+//       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+//     });
+
+//     const unsubLinks = onSnapshot(collection(db, "trackingLinks"), (snap) => {
+//       setLinks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+//     });
+
+//     return () => {
+//       unsubUsers();
+//       unsubLinks();
+//     };
+//   }, [unlocked]);
+
+useEffect(() => {
     if (!unlocked) return;
 
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
+    async function fetchData() {
+      const { getDocs } = await import("firebase/firestore");
+      
+      const usersSnap = await getDocs(collection(db, "users"));
+      setUsers(usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
-    const unsubLinks = onSnapshot(collection(db, "trackingLinks"), (snap) => {
-      setLinks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
+      const linksSnap = await getDocs(collection(db, "trackingLinks"));
+      setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }
 
-    return () => {
-      unsubUsers();
-      unsubLinks();
-    };
+    fetchData();
   }, [unlocked]);
 
   function handleUnlock() {
@@ -77,9 +93,28 @@ export default function Admin() {
         <h1 className="font-display text-4xl tracking-wider mb-2">
           ADMIN <span className="text-primary">PANEL</span>
         </h1>
-        <p className="font-body text-sm text-text-muted mb-8">
+        {/* <p className="font-body text-sm text-text-muted mb-8">
           Full system overview
-        </p>
+        </p> */}
+
+        <div className="flex items-center justify-between mb-8">
+  <p className="font-body text-sm text-text-muted">Full system overview</p>
+  <button
+    onClick={() => {
+      async function fetchData() {
+        const { getDocs } = await import("firebase/firestore");
+        const usersSnap = await getDocs(collection(db, "users"));
+        setUsers(usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const linksSnap = await getDocs(collection(db, "trackingLinks"));
+        setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      }
+      fetchData();
+    }}
+    className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-sm hover:bg-primary/20 transition-colors"
+  >
+    Refresh Data
+  </button>
+</div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
