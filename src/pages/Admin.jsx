@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase/config";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 const ADMIN_PASSWORD = "traxelon@admin123";
 
@@ -11,37 +11,24 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [links, setLinks] = useState([]);
   const [tab, setTab] = useState("users");
+  const [refreshing, setRefreshing] = useState(false);
 
-//   useEffect(() => {
-//     if (!unlocked) return;
-
-//     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-//       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-//     });
-
-//     const unsubLinks = onSnapshot(collection(db, "trackingLinks"), (snap) => {
-//       setLinks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-//     });
-
-//     return () => {
-//       unsubUsers();
-//       unsubLinks();
-//     };
-//   }, [unlocked]);
-
-useEffect(() => {
-    if (!unlocked) return;
-
-    async function fetchData() {
-      const { getDocs } = await import("firebase/firestore");
-      
+  async function fetchData() {
+    setRefreshing(true);
+    try {
       const usersSnap = await getDocs(collection(db, "users"));
       setUsers(usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
       const linksSnap = await getDocs(collection(db, "trackingLinks"));
       setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Error fetching data:", err);
     }
+    setRefreshing(false);
+  }
 
+  useEffect(() => {
+    if (!unlocked) return;
     fetchData();
   }, [unlocked]);
 
@@ -90,31 +77,19 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-surface pt-16 text-text-primary">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="font-display text-4xl tracking-wider mb-2">
-          ADMIN <span className="text-primary">PANEL</span>
-        </h1>
-        {/* <p className="font-body text-sm text-text-muted mb-8">
-          Full system overview
-        </p> */}
-
-        <div className="flex items-center justify-between mb-8">
-  <p className="font-body text-sm text-text-muted">Full system overview</p>
-  <button
-    onClick={() => {
-      async function fetchData() {
-        const { getDocs } = await import("firebase/firestore");
-        const usersSnap = await getDocs(collection(db, "users"));
-        setUsers(usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-        const linksSnap = await getDocs(collection(db, "trackingLinks"));
-        setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      }
-      fetchData();
-    }}
-    className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-sm hover:bg-primary/20 transition-colors"
-  >
-    Refresh Data
-  </button>
-</div>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="font-display text-4xl tracking-wider">
+            ADMIN <span className="text-primary">PANEL</span>
+          </h1>
+          <button
+            onClick={fetchData}
+            disabled={refreshing}
+            className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-sm hover:bg-primary/20 transition-colors disabled:opacity-50"
+          >
+            {refreshing ? "Refreshing..." : "Refresh Data"}
+          </button>
+        </div>
+        <p className="font-body text-sm text-text-muted mb-8">Full system overview</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
