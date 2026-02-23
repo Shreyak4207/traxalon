@@ -10,27 +10,15 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [links, setLinks] = useState([]);
   const [tab, setTab] = useState("users");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Wait for auth to load
-    if (currentUser === undefined) return;
-
-    // Not logged in
-    if (currentUser === null) {
-      setLoading(false);
-      return;
-    }
-
-    // Wrong email
-    if (currentUser.email !== ADMIN_EMAIL) {
-      setLoading(false);
-      return;
-    }
+    if (currentUser === null) return;
+    if (!currentUser) return;
+    if (currentUser.email !== ADMIN_EMAIL) return;
 
     const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
       setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
     });
 
     const unsubLinks = onSnapshot(collection(db, "trackingLinks"), (snap) => {
@@ -43,15 +31,15 @@ export default function Admin() {
     };
   }, [currentUser]);
 
-  if (loading) {
+  if (!currentUser) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-primary font-display text-2xl">Loading...</div>
+        <div className="text-accent font-display text-2xl">Please Login First</div>
       </div>
     );
   }
 
-  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+  if (currentUser.email !== ADMIN_EMAIL) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-accent font-display text-2xl">Access Denied</div>
