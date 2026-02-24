@@ -64,6 +64,21 @@ export function AuthProvider({ children }) {
     return null;
   }
 
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  //     setCurrentUser(user);
+  //     if (user) {
+  //       await fetchUserProfile(user.uid);
+  //       await updateDoc(doc(db, "users", user.uid), {
+  //         lastSeen: serverTimestamp(),
+  //       });
+  //     }
+  //     setLoading(false);
+  //   });
+  //   return unsubscribe;
+  // }, []);
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -72,6 +87,16 @@ export function AuthProvider({ children }) {
         await updateDoc(doc(db, "users", user.uid), {
           lastSeen: serverTimestamp(),
         });
+
+        // Update lastSeen every 2 minutes while user is active
+        const interval = setInterval(async () => {
+          await updateDoc(doc(db, "users", user.uid), {
+            lastSeen: serverTimestamp(),
+          });
+        }, 2 * 60 * 1000);
+
+        // Cleanup interval on logout
+        return () => clearInterval(interval);
       }
       setLoading(false);
     });
