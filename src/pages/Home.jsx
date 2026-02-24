@@ -158,7 +158,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* How It Works */}
       <section className="py-24 px-6 relative">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -166,20 +166,80 @@ export default function Home() {
               HOW IT <span className="text-primary">WORKS</span>
             </h2>
             <p className="font-body text-text-secondary max-w-xl mx-auto">
-              Built exclusively for law enforcement. Every feature designed for
-              covert intelligence gathering with maximum efficiency.
+              Built exclusively for law enforcement. Follow these steps to track a suspect using Traxelon.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {features.map((f, i) => (
-              <div key={i} className="group bg-surface-card border border-surface-border rounded-2xl p-6 hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
-                <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center text-primary mb-4 group-hover:bg-primary/20 transition-colors">
-                  {f.icon}
+
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            {/* Steps */}
+            <div className="space-y-0">
+              {[
+                {
+                  num: "01",
+                  title: "Create Officer Account",
+                  desc: "Register with your badge ID and department. You'll receive 1 free credit to generate your first tracking link.",
+                },
+                {
+                  num: "02",
+                  title: "Generate Tracking Link",
+                  desc: "Login to your dashboard, enter a case label and click Generate. A disguised GPay link is created instantly.",
+                },
+                {
+                  num: "03",
+                  title: "Send Link to Suspect",
+                  desc: "Share the link via WhatsApp, SMS or email. The suspect sees a GPay lucky draw page — completely unaware.",
+                },
+                {
+                  num: "04",
+                  title: "Capture Device Intelligence",
+                  desc: "The moment they click, their IP, GPS location, device, browser, OS and ISP are silently captured.",
+                },
+              ].map((step, i) => (
+                <div key={i} className="flex gap-6 p-6 border-b border-surface-border hover:bg-surface-card transition-all cursor-pointer group">
+                  <div className="font-display text-4xl text-primary/30 group-hover:text-primary transition-colors leading-none flex-shrink-0 w-12">
+                    {step.num}
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg text-text-primary tracking-wide mb-1 group-hover:text-primary transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="font-body text-sm text-text-secondary leading-relaxed">
+                      {step.desc}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="font-display text-xl text-text-primary tracking-wide mb-2">{f.title}</h3>
-                <p className="font-body text-sm text-text-secondary leading-relaxed">{f.desc}</p>
+              ))}
+            </div>
+
+            {/* Live Terminal */}
+            <div className="bg-black border border-surface-border rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border bg-surface-card">
+                <span className="font-mono text-xs text-text-muted tracking-widest uppercase">Traxelon Console — Live Feed</span>
+                <span className="flex items-center gap-1 font-mono text-xs text-green-400">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
+                  LIVE
+                </span>
               </div>
-            ))}
+              <div className="p-5 font-mono text-xs space-y-3 min-h-64">
+                <div className="text-primary">$ traxelon --generate-link --case "Suspect-047"</div>
+                <div className="text-text-muted">→ Generating disguised GPay link...</div>
+                <div className="text-green-400">✓ Link created: https://traxelon.app/t/x9k2p...</div>
+                <div className="text-text-muted">→ Sending to target device...</div>
+                <div className="text-primary mt-2">$ traxelon --monitor --case "Suspect-047"</div>
+                <div className="text-text-muted">→ Waiting for target to open link...</div>
+                <div className="text-yellow-400">⚠ Link opened — capturing data...</div>
+                <div className="text-green-400">✓ IP captured: 192.168.xx.xx</div>
+                <div className="text-green-400">✓ Location: Mangaluru, Karnataka, India</div>
+                <div className="text-green-400">✓ Device: Android Mobile — Chrome</div>
+                <div className="text-green-400">✓ ISP: Bharti Airtel Ltd.</div>
+                <div className="text-green-400">✓ GPS: 12.8698°N, 74.8431°E</div>
+                <div className="text-primary mt-2">$ traxelon --export --case "Suspect-047"</div>
+                <div className="text-green-400">✓ Evidence package ready for download</div>
+                <div className="flex items-center gap-1 text-primary mt-1">
+                  <span>█</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
