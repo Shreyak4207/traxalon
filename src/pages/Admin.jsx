@@ -43,9 +43,21 @@ export default function Admin() {
     setRefreshing(false);
   }
 
+  // useEffect(() => {
+  //   if (!unlocked) return;
+  //   fetchData();
+  // }, [unlocked]);
+
   useEffect(() => {
     if (!unlocked) return;
     fetchData();
+
+    // Auto refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30 * 1000);
+
+    return () => clearInterval(interval);
   }, [unlocked]);
 
   function handleUnlock() {
