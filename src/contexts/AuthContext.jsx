@@ -141,10 +141,21 @@ export function AuthProvider({ children }) {
     return result;
   }
 
+  // async function logout() {
+  //   if (currentUser) {
+  //     await updateDoc(doc(db, "users", currentUser.uid), {
+  //       lastSeen: serverTimestamp(),
+  //     });
+  //   }
+  //   setUserProfile(null);
+  //   return signOut(auth);
+  // }
+
+
   async function logout() {
     if (currentUser) {
       await updateDoc(doc(db, "users", currentUser.uid), {
-        lastSeen: serverTimestamp(),
+        lastSeen: null,
       });
     }
     setUserProfile(null);
