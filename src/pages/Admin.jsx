@@ -43,12 +43,7 @@ export default function Admin() {
     setRefreshing(false);
   }
 
-  // useEffect(() => {
-  //   if (!unlocked) return;
-  //   fetchData();
-  // }, [unlocked]);
-
-  useEffect(() => {
+useEffect(() => {
     if (!unlocked) return;
     fetchData();
 
@@ -59,7 +54,7 @@ export default function Admin() {
 
     return () => clearInterval(interval);
   }, [unlocked]);
-
+  
   function handleUnlock() {
     if (password === ADMIN_PASSWORD) {
       setUnlocked(true);
