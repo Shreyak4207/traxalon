@@ -240,7 +240,7 @@ export default function Dashboard() {
                             <span className="font-body text-sm font-semibold text-text-primary truncate">
                               {link.label}
                             </span>
-                            <span
+                            {/* <span
                               className={`px-2 py-0.5 rounded-full text-xs font-mono flex-shrink-0 ${
                                 link.active
                                   ? "bg-primary/10 text-primary"
@@ -248,7 +248,7 @@ export default function Dashboard() {
                               }`}
                             >
                               {link.active ? "ACTIVE" : "INACTIVE"}
-                            </span>
+                            </span> */}
                           </div>
                           <div className="font-mono text-xs text-text-muted truncate">
                             {link.trackingUrl}
