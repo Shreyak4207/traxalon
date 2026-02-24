@@ -21,8 +21,13 @@ export default function Admin() {
       usersData.sort((a, b) => (b.lastSeen?.toMillis?.() ?? b.createdAt?.toMillis?.() ?? 0) - (a.lastSeen?.toMillis?.() ?? a.createdAt?.toMillis?.() ?? 0));
       setUsers(usersData);
 
+      // const linksSnap = await getDocs(collection(db, "trackingLinks"));
+      // setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+
       const linksSnap = await getDocs(collection(db, "trackingLinks"));
-      setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+const linksData = linksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+linksData.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+setLinks(linksData);
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -239,5 +244,4 @@ function DataRow({ label, value }) {
       <div className="font-mono text-xs text-text-primary break-all">{value}</div>
     </div>
   );
-}/ /   f o r c e   d e p l o y  
- 
+}
