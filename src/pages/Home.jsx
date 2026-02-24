@@ -242,7 +242,7 @@ export default function Home() {
             ))}
           </div>
 
-          {!currentUser && (
+          {/* {!currentUser && (
             <div className="text-center mt-12">
               <Link
                 to="/signup"
@@ -252,7 +252,7 @@ export default function Home() {
                 <ChevronRight className="w-5 h-5" />
               </Link>
             </div>
-          )}
+          )} */}
         </div>
       </section>
 
