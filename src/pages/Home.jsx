@@ -185,20 +185,65 @@ export default function Home() {
       </section>
 
       {/* CTA */}
+     {/* How to Use */}
       <section className="py-24 px-6">
-        <div className="max-w-3xl mx-auto text-center bg-surface-elevated border border-surface-border rounded-3xl p-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-hero-gradient opacity-50" />
-          <div className="relative z-10">
-            <Shield className="w-16 h-16 text-primary mx-auto mb-6 animate-float" />
-            <h2 className="font-display text-4xl md:text-5xl text-text-primary tracking-wider mb-4">
-              JOIN THE FORCE.<br />
-              <span className="text-primary">START TRACKING.</span>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-5xl text-text-primary tracking-wider mb-4">
+              HOW TO <span className="text-primary">USE</span>
             </h2>
-            <p className="font-body text-text-secondary mb-8">
-              Sign up as a verified officer and receive 1 free credit to generate
-              your first tracking link. Upgrade anytime for continued access.
+            <p className="font-body text-text-secondary max-w-xl mx-auto">
+              Follow these steps to generate and deploy a tracking link as a law enforcement officer.
             </p>
-            {!currentUser && (
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                step: "01",
+                title: "Create Officer Account",
+                desc: "Register with your official badge ID and department credentials. You'll receive 1 free credit to get started.",
+              },
+              {
+                step: "02",
+                title: "Login to Dashboard",
+                desc: "Access your personal command center where all your tracking links and captured data are displayed.",
+              },
+              {
+                step: "03",
+                title: "Generate Tracking Link",
+                desc: "Enter a case label and click Generate. The system creates a disguised GPay-looking link that captures device data when opened.",
+              },
+              {
+                step: "04",
+                title: "Send Link to Target",
+                desc: "Share the generated link with the suspect via WhatsApp, SMS, or email. The link appears as a legitimate GPay lucky draw page.",
+              },
+              {
+                step: "05",
+                title: "Capture Device Intelligence",
+                desc: "The moment the suspect clicks the link, their IP address, GPS location, device type, browser, OS, ISP and timezone are silently captured.",
+              },
+              {
+                step: "06",
+                title: "View Captured Data",
+                desc: "Return to your dashboard and click on the tracking link to view all captured device data in real time.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-6 bg-surface-card border border-surface-border rounded-2xl p-6 hover:border-primary/50 transition-all duration-300">
+                <div className="font-display text-5xl text-primary/20 leading-none flex-shrink-0 w-16">
+                  {item.step}
+                </div>
+                <div>
+                  <h3 className="font-display text-xl text-text-primary tracking-wide mb-2">{item.title}</h3>
+                  <p className="font-body text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!currentUser && (
+            <div className="text-center mt-12">
               <Link
                 to="/signup"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow hover:shadow-glow-strong"
@@ -206,8 +251,8 @@ export default function Home() {
                 Create Officer Account
                 <ChevronRight className="w-5 h-5" />
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
