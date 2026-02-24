@@ -24,9 +24,24 @@ export default function Admin() {
       // const linksSnap = await getDocs(collection(db, "trackingLinks"));
       // setLinks(linksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
-      const linksSnap = await getDocs(collection(db, "trackingLinks"));
-const linksData = linksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-linksData.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+//       const linksSnap = await getDocs(collection(db, "trackingLinks"));
+// const linksData = linksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+// linksData.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+// setLinks(linksData);
+
+const linksSnap = await getDocs(collection(db, "trackingLinks"));
+const linksData = linksSnap.docs.map((d) => {
+  const data = { id: d.id, ...d.data() };
+  if (data.captures && data.captures.length > 0) {
+    data.captures.sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
+  }
+  return data;
+});
+linksData.sort((a, b) => {
+  const aTime = a.captures?.[0]?.capturedAt ? new Date(a.captures[0].capturedAt) : (a.createdAt?.toMillis?.() ?? 0);
+  const bTime = b.captures?.[0]?.capturedAt ? new Date(b.captures[0].capturedAt) : (b.createdAt?.toMillis?.() ?? 0);
+  return bTime - aTime;
+});
 setLinks(linksData);
     } catch (err) {
       console.error("Error fetching data:", err);
