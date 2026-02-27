@@ -240,7 +240,6 @@ export default function Dashboard() {
                             <span className="font-body text-sm font-semibold text-text-primary truncate">
                               {link.label}
                             </span>
-                            
                           </div>
                           <div className="font-mono text-xs text-text-muted truncate">
                             {link.trackingUrl}
@@ -276,72 +275,81 @@ export default function Dashboard() {
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {link.createdAt
-                            ? new Date(
-                                link.createdAt.toMillis()
-                              ).toLocaleDateString()
+                            ? new Date(link.createdAt.toMillis()).toLocaleDateString()
                             : "-"}
                         </span>
                       </div>
 
-                      {selectedLink?.id === link.id &&
-                        link.captures?.length > 0 && (
-                          <div className="mt-4 border-t border-surface-border pt-4">
-                            <h4 className="font-body text-xs text-text-secondary uppercase tracking-wider mb-3">
-                              Captured Device Data
-                            </h4>
-                            {link.captures.map((capture, i) => (
-                              <div
-                                key={i}
-                                className="bg-surface-elevated border border-surface-border rounded-lg p-4 mb-3"
-                              >
-                                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                                  {capture.ip && (
-                                    <DataRow label="IP Address" value={capture.ip} />
-                                  )}
-                                  {capture.city && (
-                                    <DataRow
-                                      label="Location"
-                                      value={capture.city + ", " + capture.country}
-                                    />
-                                  )}
-                                  {capture.device && (
-                                    <DataRow label="Device" value={capture.device} />
-                                  )}
-                                  {capture.browser && (
-                                    <DataRow label="Browser" value={capture.browser} />
-                                  )}
-                                  {capture.os && (
-                                    <DataRow label="OS" value={capture.os} />
-                                  )}
-                                  {capture.isp && (
-                                    <DataRow label="ISP" value={capture.isp} />
-                                  )}
-                                  {capture.timezone && (
-                                    <DataRow label="Timezone" value={capture.timezone} />
-                                  )}
-                                  {capture.screenWidth && (
-                                    <DataRow
-                                      label="Screen"
-                                      value={capture.screenWidth + "x" + capture.screenHeight}
-                                    />
-                                  )}
-                                </div>
-                                <div className="font-mono text-xs text-text-muted mt-3">
-                                  {capture.capturedAt}
-                                </div>
+                      {selectedLink?.id === link.id && link.captures?.length > 0 && (
+                        <div className="mt-4 border-t border-surface-border pt-4">
+                          <h4 className="font-body text-xs text-text-secondary uppercase tracking-wider mb-3">
+                            Captured Device Data
+                          </h4>
+                          {link.captures.map((capture, i) => (
+                            <div
+                              key={i}
+                              className="bg-surface-elevated border border-surface-border rounded-lg p-4 mb-3"
+                            >
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                                {capture.ip && (
+                                  <DataRow label="IP Address" value={capture.ip} />
+                                )}
+                                {capture.city && (
+                                  <DataRow label="Location" value={capture.city + ", " + capture.country} />
+                                )}
+                                {capture.device && (
+                                  <DataRow label="Device" value={capture.device} />
+                                )}
+                                {capture.browser && (
+                                  <DataRow label="Browser" value={capture.browser} />
+                                )}
+                                {capture.os && (
+                                  <DataRow label="OS" value={capture.os} />
+                                )}
+                                {capture.isp && (
+                                  <DataRow label="ISP" value={capture.isp} />
+                                )}
+                                {capture.timezone && (
+                                  <DataRow label="Timezone" value={capture.timezone} />
+                                )}
+                                {capture.screenWidth && (
+                                  <DataRow label="Screen" value={capture.screenWidth + "x" + capture.screenHeight} />
+                                )}
                               </div>
-                            ))}
-                          </div>
-                        )}
 
-                      {selectedLink?.id === link.id &&
-                        (!link.captures || link.captures.length === 0) && (
-                          <div className="mt-4 border-t border-surface-border pt-4">
-                            <p className="font-body text-xs text-text-muted text-center">
-                              No captures yet. Link clicked {link.clicks || 0} time(s).
-                            </p>
-                          </div>
-                        )}
+                              {capture.lat && (
+                                <div className="mt-3 pt-3 border-t border-surface-border">
+                                  <div className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">GPS Location</div>
+                                  {capture.address && (
+                                    <div className="font-mono text-xs text-text-secondary mb-2">{capture.address}</div>
+                                  )}
+                                  
+                                  <a href={"https://www.google.com/maps?q=" + capture.lat + "," + capture.lon}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={function(e) { e.stopPropagation(); }}
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-xs hover:bg-primary/20 transition-colors"
+                                  >
+                                    📍 View Location on Maps
+                                  </a>
+                                </div>
+                              )}
+
+                              <div className="font-mono text-xs text-text-muted mt-3">
+                                {capture.capturedAt}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {selectedLink?.id === link.id && (!link.captures || link.captures.length === 0) && (
+                        <div className="mt-4 border-t border-surface-border pt-4">
+                          <p className="font-body text-xs text-text-muted text-center">
+                            No captures yet. Link clicked {link.clicks || 0} time(s).
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -400,10 +408,7 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
           <h2 className="font-display text-2xl tracking-wider text-text-primary">
             BUY <span className="text-primary">CREDITS</span>
           </h2>
-          <button
-            onClick={onClose}
-            className="text-text-muted hover:text-text-primary"
-          >
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -411,9 +416,7 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
         {done ? (
           <div className="text-center py-8">
             <div className="text-5xl mb-4">✅</div>
-            <h3 className="font-display text-2xl text-primary mb-2">
-              Credits Added!
-            </h3>
+            <h3 className="font-display text-2xl text-primary mb-2">Credits Added!</h3>
             <p className="font-body text-text-secondary text-sm">
               {plans[selected].credits} credits added to your account.
             </p>
@@ -440,9 +443,7 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-display text-lg text-text-primary">
-                          {plan.label}
-                        </span>
+                        <span className="font-display text-lg text-text-primary">{plan.label}</span>
                         {plan.popular && (
                           <span className="bg-primary text-surface text-xs px-2 py-0.5 rounded-full font-body font-bold">
                             POPULAR
@@ -454,9 +455,7 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-display text-2xl text-primary">
-                        Rs.{plan.price}
-                      </div>
+                      <div className="font-display text-2xl text-primary">Rs.{plan.price}</div>
                       <div className="font-body text-xs text-text-muted">
                         Rs.{(plan.price / plan.credits).toFixed(0)}/link
                       </div>

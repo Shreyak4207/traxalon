@@ -239,6 +239,7 @@ export default function Home() {
                   <span>█</span>
                 </div>
               </div>
+              
             </div>
           </div>
         </div>
