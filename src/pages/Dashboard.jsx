@@ -317,53 +317,33 @@ export default function Dashboard() {
                                 )}
                               </div>
 
-                              {/* {capture.lat && (
+                              {capture.lat && (
                                 <div className="mt-3 pt-3 border-t border-surface-border">
                                   <div className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">GPS Location</div>
                                   {capture.address && (
                                     <div className="font-mono text-xs text-text-secondary mb-2">{capture.address}</div>
                                   )}
+                                  <div className="rounded-xl overflow-hidden border border-surface-border mb-3" style={{ height: 180 }}>
+                                    <iframe
+                                      title={"map-" + i}
+                                      width="100%"
+                                      height="100%"
+                                      frameBorder="0"
+                                      src={"https://maps.google.com/maps?q=" + capture.lat + "," + capture.lon + "&z=15&output=embed"}
+                                      allowFullScreen
+                                    />
+                                  </div>
                                   
-                                  <a href={"https://www.google.com/maps?q=" + capture.lat + "," + capture.lon}
+                                    <a href={"https://www.google.com/maps?q=" + capture.lat + "," + capture.lon}
                                     target="_blank"
                                     rel="noreferrer"
                                     onClick={function(e) { e.stopPropagation(); }}
-                                    className="inline-flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-xs hover:bg-primary/20 transition-colors"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors"
                                   >
-                                    📍 View Location on Maps
+                                    📍 View on Google Maps
                                   </a>
                                 </div>
-                              )} */}
-
-                              {capture.lat && (
-  <div className="mt-3 pt-3 border-t border-surface-border">
-    <div className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">GPS Location</div>
-    {capture.address && (
-      <div className="font-mono text-xs text-text-secondary mb-2">{capture.address}</div>
-    )}
-    {/* Map Box */}
-    <div className="rounded-xl overflow-hidden border border-surface-border mb-3" style={{ height: 180 }}>
-      <iframe
-        title="location"
-        width="100%"
-        height="100%"
-        frameBorder="0"
-        src={"https://maps.google.com/maps?q=" + capture.lat + "," + capture.lon + "&z=15&output=embed"}
-        allowFullScreen
-      />
-    </div>
-    {/* View on Maps Button */}
-    
-      <a href={"https://www.google.com/maps?q=" + capture.lat + "," + capture.lon}
-      target="_blank"
-      rel="noreferrer"
-      onClick={function(e) { e.stopPropagation(); }}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors"
-    >
-      📍 View on Google Maps
-    </a>
-  </div>
-)}
+                              )}
 
                               <div className="font-mono text-xs text-text-muted mt-3">
                                 {capture.capturedAt}
