@@ -59,10 +59,23 @@ export default function Admin() {
     }
   }
 
+  // function isActive(user) {
+  //   if (!user.lastSeen) return false;
+  //   return (new Date() - new Date(user.lastSeen.toMillis())) < 5 * 60 * 1000;
+  // }
+
   function isActive(user) {
-    if (!user.lastSeen) return false;
-    return (new Date() - new Date(user.lastSeen.toMillis())) < 5 * 60 * 1000;
+  if (!user.lastSeen) return false;
+  try {
+    let ms;
+    if (user.lastSeen.toMillis) ms = user.lastSeen.toMillis();
+    else if (user.lastSeen.seconds) ms = user.lastSeen.seconds * 1000;
+    else ms = new Date(user.lastSeen).getTime();
+    return (new Date() - ms) < 10 * 60 * 1000;
+  } catch {
+    return false;
   }
+}
 
   async function handleDeleteUser(userId) {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
@@ -226,7 +239,18 @@ export default function Admin() {
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-text-secondary text-center">{user.totalLinksGenerated ?? 0}</td>
                       <td className="px-4 py-3 font-body text-xs text-text-muted whitespace-nowrap">
-                        {user.lastSeen ? new Date(user.lastSeen.toMillis()).toLocaleString("en-IN") : "Never"}
+                        {user.lastSeen
+  ? (() => {
+      try {
+        if (user.lastSeen.toMillis) return new Date(user.lastSeen.toMillis()).toLocaleString("en-IN");
+        if (user.lastSeen.seconds) return new Date(user.lastSeen.seconds * 1000).toLocaleString("en-IN");
+        return new Date(user.lastSeen).toLocaleString("en-IN");
+      } catch {
+        return "Never";
+      }
+    })()
+  : "Never"}
+                        {/* {user.lastSeen ? new Date(user.lastSeen.toMillis()).toLocaleString("en-IN") : "Never"} */}
                       </td>
                       <td className="px-4 py-3 font-body text-xs text-text-muted whitespace-nowrap">
                         {user.createdAt ? new Date(user.createdAt.toMillis()).toLocaleDateString("en-IN") : "-"}
