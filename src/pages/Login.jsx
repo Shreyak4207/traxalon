@@ -22,11 +22,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const result = await login(email, password);
-
-      // Reload user to get latest emailVerified status from Firebase
-      await result.user.reload();
-      const freshUser = auth.currentUser;
+      const freshUser = await login(email, password);
 
       if (!freshUser.emailVerified) {
         await auth.signOut();

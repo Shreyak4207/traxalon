@@ -45,10 +45,15 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const result = await signInWithEmailAndPassword(auth, email, password);
-    await updateDoc(doc(db, "users", result.user.uid), {
+  
+    // Force reload to get fresh emailVerified status
+    await result.user.reload();
+  
+    await setDoc(doc(db, "users", result.user.uid), {
       lastSeen: serverTimestamp(),
-    });
-    return result;
+    }, { merge: true });
+  
+    return auth.currentUser; // return fresh user, not cached
   }
 
   async function logout() {
@@ -78,22 +83,27 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let interval = null;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
       if (user) {
-        await fetchUserProfile(user.uid);
-        await setDoc(doc(db, "users", user.uid), {
+        // Force reload to get fresh emailVerified status
+        await user.reload();
+        const freshUser = auth.currentUser;
+
+        setCurrentUser(freshUser);
+        await fetchUserProfile(freshUser.uid);
+        await setDoc(doc(db, "users", freshUser.uid), {
           lastSeen: serverTimestamp(),
         }, { merge: true });
 
         if (interval) clearInterval(interval);
         interval = setInterval(async () => {
           try {
-            await setDoc(doc(db, "users", user.uid), {
+            await setDoc(doc(db, "users", freshUser.uid), {
               lastSeen: serverTimestamp(),
             }, { merge: true });
           } catch (e) {}
         }, 2 * 60 * 1000);
       } else {
+        setCurrentUser(null);
         if (interval) clearInterval(interval);
       }
       setLoading(false);
