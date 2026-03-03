@@ -83,6 +83,21 @@ export function AuthProvider({ children }) {
     return sendPasswordResetEmail(auth, email);
   }
 
+  async function resendVerification(email, password) {
+    try {
+      // Temporarily sign in user
+      const result = await signInWithEmailAndPassword(auth, email, password);
+
+      await sendEmailVerification(result.user);
+
+      // Immediately log out again
+      await signOut(auth);
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async function fetchUserProfile(uid) {
     const docRef = doc(db, "users", uid);
     const docSnap = await getDoc(docRef);
@@ -138,6 +153,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     resetPassword,
+    resendVerification,
     fetchUserProfile,
   };
 

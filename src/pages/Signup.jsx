@@ -18,7 +18,7 @@ function getPasswordStrength(password) {
 }
 
 export default function Signup() {
-  const { signup } = useAuth();
+  const { signup, resendVerification } = useAuth();
   const [form, setForm] = useState({
     displayName: "",
     email: "",
@@ -32,6 +32,8 @@ export default function Signup() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [resendStatus, setResendStatus] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   const strength = getPasswordStrength(form.password);
 
@@ -57,31 +59,91 @@ export default function Signup() {
 
   if (registered) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center px-4 pt-16">
+      <div className="min-h-screen bg-surface flex items-center justify-center px-4 relative overflow-hidden">
+
+        {/* Background glow */}
         <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20 pointer-events-none" />
+        <div className="absolute w-[400px] h-[400px] bg-primary/10 rounded-full blur-3xl top-1/3 left-1/2 -translate-x-1/2" />
+
         <div className="relative w-full max-w-md">
-          <div className="bg-surface-elevated border border-surface-border rounded-2xl p-8 shadow-card text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 border border-primary/30 rounded-2xl mb-4">
-              <Mail className="w-7 h-7 text-primary" />
+          <div className="bg-surface-elevated border border-surface-border rounded-3xl p-10 shadow-card text-center backdrop-blur-xl">
+
+            {/* Icon */}
+            <div className="flex items-center justify-center w-20 h-20 mx-auto bg-primary/10 border border-primary/30 rounded-2xl mb-6 shadow-glow">
+              <Mail className="w-10 h-10 text-primary" />
             </div>
-            <h2 className="font-display text-2xl tracking-wider text-text-primary mb-2">
-              VERIFY YOUR <span className="text-primary">EMAIL</span>
+
+            {/* Title */}
+            <h2 className="font-display text-3xl tracking-wider text-text-primary">
+              CHECK YOUR <span className="text-primary">EMAIL</span>
             </h2>
-            <p className="font-body text-sm text-text-secondary mt-3 leading-relaxed">
-              A verification link has been sent to{" "}
-              <span className="text-primary font-semibold">{form.email}</span>.
+
+            {/* Description */}
+            <p className="font-body text-sm text-text-secondary mt-4 leading-relaxed">
+              We've sent a verification link to
+            </p>
+
+            {/* Highlighted email */}
+            <div className="mt-3 px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl text-primary font-mono text-sm break-all">
+              {form.email}
+            </div>
+
+            <p className="font-body text-xs text-text-muted mt-4">
+              Click the link in your inbox to activate your account.
               <br />
-              Please check your inbox and click the link to activate your account before logging in.
+              If you don’t see it, check your spam folder.
             </p>
-            <p className="font-body text-xs text-text-muted mt-3">
-              Didn't receive it? Check your spam folder.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block mt-6 px-6 py-3 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow"
-            >
-              Go to Login
-            </Link>
+
+            {/* Buttons */}
+            <div className="mt-8 space-y-3">
+
+              <Link
+                to="/login"
+                className="block w-full px-6 py-3 bg-primary text-surface font-body font-bold rounded-xl hover:bg-primary-dark transition-all shadow-glow"
+              >
+                Go to Login
+              </Link>
+
+              {/* <button
+                onClick={() => window.location.reload()}
+                className="block w-full px-6 py-3 bg-surface border border-surface-border text-text-secondary font-body rounded-xl hover:border-primary hover:text-primary transition-colors"
+              >
+                Resend Verification Email
+              </button> */}
+
+              <button
+                onClick={async () => {
+                  setResendLoading(true);
+                  setResendStatus("");
+
+                  try {
+                    await resendVerification(form.email, form.password);
+                    setResendStatus("success");
+                  } catch (err) {
+                    setResendStatus("error");
+                  }
+
+                  setResendLoading(false);
+                }}
+                disabled={resendLoading}
+                className="block w-full px-6 py-3 bg-surface border border-surface-border text-text-secondary font-body rounded-xl hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+              >
+                {resendLoading ? "Sending..." : "Resend Verification Email"}
+              </button>
+              {resendStatus === "success" && (
+                <p className="text-green-400 text-xs mt-3">
+                  ✅ Verification email sent again. Check your inbox.
+                </p>
+              )}
+
+              {resendStatus === "error" && (
+                <p className="text-red-400 text-xs mt-3">
+                  ⚠️ Unable to resend email. Please try again.
+                </p>
+              )}
+
+            </div>
+
           </div>
         </div>
       </div>
@@ -151,10 +213,10 @@ export default function Signup() {
                 <input type={showConfirm ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange}
                   placeholder="Repeat password" required
                   className={`w-full bg-surface border rounded-lg pl-10 pr-10 py-3 font-body text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors ${form.confirmPassword && form.confirmPassword !== form.password
-                      ? "border-red-500 focus:border-red-500"
-                      : form.confirmPassword && form.confirmPassword === form.password
-                        ? "border-green-500 focus:border-green-500"
-                        : "border-surface-border focus:border-primary"
+                    ? "border-red-500 focus:border-red-500"
+                    : form.confirmPassword && form.confirmPassword === form.password
+                      ? "border-green-500 focus:border-green-500"
+                      : "border-surface-border focus:border-primary"
                     }`} />
                 <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary">
                   {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
