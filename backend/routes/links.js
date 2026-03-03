@@ -213,11 +213,11 @@ router.post("/capture", async(req, res) => {
             ram: ram || null,
             gpu: gpu || null,
             gpuVendor: gpuVendor || null,
-            maxTouchPoints: maxTouchPoints ? ? null,
+            maxTouchPoints: maxTouchPoints || null,
 
             // Battery
-            batteryLevel: batteryLevel ? ? null,
-            batteryCharging: batteryCharging ? ? null,
+            batteryLevel: batteryLevel || null,
+            batteryCharging: batteryCharging || null,
 
             // Screen
             screenWidth: screenWidth || null,
@@ -234,7 +234,7 @@ router.post("/capture", async(req, res) => {
             language: language || null,
             languages: languages || null,
             platform: platform || null,
-            cookiesEnabled: cookiesEnabled ? ? null,
+            cookiesEnabled: cookiesEnabled || null,
             doNotTrack: doNotTrack || null,
             historyLength: historyLength || null,
 
@@ -242,10 +242,10 @@ router.post("/capture", async(req, res) => {
             connectionType: connectionType || null,
             connectionDownlink: connectionDownlink || null,
             connectionRtt: connectionRtt || null,
-            connectionSaveData: connectionSaveData ? ? null,
+            connectionSaveData: connectionSaveData || null,
 
             // Privacy & Fingerprint
-            incognito: incognito ? ? null,
+            incognito: incognito || null,
             canvasHash: canvasHash || null,
         };
 
