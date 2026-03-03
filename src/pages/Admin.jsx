@@ -78,14 +78,23 @@ export default function Admin() {
 }
 
   async function handleDeleteUser(userId) {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    try {
-      await deleteDoc(doc(db, "users", userId));
+  if (!window.confirm("Are you sure you want to delete this user?")) return;
+  try {
+    const res = await fetch("https://traxalon.onrender.com/api/links/delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid: userId }),
+    });
+    const data = await res.json();
+    if (data.success) {
       setUsers(users.filter((u) => u.id !== userId));
-    } catch (err) {
-      alert("Error deleting user!");
+    } else {
+      alert("Error: " + data.error);
     }
+  } catch (err) {
+    alert("Error deleting user!");
   }
+}
 
   async function handleUpdateCredits(userId, newCredits) {
     try {

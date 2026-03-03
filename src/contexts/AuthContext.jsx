@@ -22,12 +22,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function signup(email, password, displayName, badgeId, department) {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-
-    // Send verification email
-    await sendEmailVerification(user);
-
-    await setDoc(doc(db, "users", user.uid), {
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
+  const userRef = doc(db, "users", user.uid);
+  const existing = await getDoc(userRef);
+  if (!existing.exists()) {
+    await setDoc(userRef, {
       uid: user.uid,
       email,
       displayName,
@@ -38,13 +37,11 @@ export function AuthProvider({ children }) {
       createdAt: serverTimestamp(),
       lastSeen: serverTimestamp(),
       totalLinksGenerated: 0,
-      emailVerified: false,
     });
-
-    await signOut(auth);
-
-    return user;
   }
+  await signOut(auth);
+  return user;
+}
 
   async function login(email, password) {
     const result = await signInWithEmailAndPassword(auth, email, password);
