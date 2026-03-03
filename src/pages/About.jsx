@@ -69,7 +69,7 @@ export default function About() {
           <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-5 py-2 mb-8">
             <Activity className="w-3 h-3 text-primary flex-shrink-0" />
             <span className="font-mono text-xs text-primary tracking-wider uppercase whitespace-nowrap">
-              Intelligence Platform · Est. 2024
+              Intelligence Platform · Est. 2026
             </span>
           </div>
 
