@@ -73,10 +73,9 @@ export default function About() {
             </span>
           </div>
 
-          <h1 className="font-display text-7xl md:text-9xl text-text-primary leading-none mb-6 tracking-wider">
-            ABOUT<br />
-            <span className="text-primary" style={{ textShadow: "0 0 40px rgba(0,212,255,0.5)" }}>
-              TRAXELON.
+          <h1 className="font-display text-5xl md:text-6xl text-text-primary leading-none mb-6 tracking-wider">
+            ABOUT <span className="text-primary" style={{ textShadow: "0 0 40px rgba(0,212,255,0.5)" }}>
+              US
             </span>
           </h1>
 
