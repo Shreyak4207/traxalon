@@ -55,28 +55,29 @@ export default function Contact() {
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
-
   function handleSubmit(e) {
     e.preventDefault();
     setSent(true);
   }
 
-  // SurePass Academy, MG Road, Mangalore exact coords
-  const LAT = 12.8714;
-  const LON = 74.8429;
-  const MAPS_URL = `https://www.google.com/maps?q=${LAT},${LON}`;
+  const LAT = 12.86754;
+  const LON = 74.84250;
+  const MAPS_URL = `https://www.google.com/maps?q=SurePass+Academy+Mangalore&ll=${LAT},${LON}&z=17`;
 
   return (
     <div className="min-h-screen bg-surface text-text-primary overflow-hidden">
 
       {/* ── Hero ── */}
       <section className="relative min-h-[45vh] flex items-center justify-center pt-24 pb-12">
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
-        <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
-        <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-30 pointer-events-none" />
-        <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-30 animate-scan-line pointer-events-none" />
+        {/* Background layers — all behind z-0 */}
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }} />
+        <div className="absolute inset-0 bg-hero-gradient pointer-events-none" style={{ zIndex: 1 }} />
+        <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-30 pointer-events-none" style={{ zIndex: 2 }} />
+        {/* Scan line — BEHIND text using z-index 3, text is z-10 */}
+        <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-30 animate-scan-line pointer-events-none" style={{ zIndex: 3 }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+        {/* Content — always on top */}
+        <div className="relative max-w-5xl mx-auto px-6 text-center" style={{ zIndex: 10 }}>
           <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-5 py-2 mb-8">
             <Activity className="w-3 h-3 text-primary flex-shrink-0" />
             <span className="font-mono text-xs text-primary tracking-wider uppercase whitespace-nowrap">
@@ -98,7 +99,7 @@ export default function Contact() {
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="grid md:grid-cols-5 gap-8">
 
-          {/* ── Left: Contact Info + Map ── */}
+          {/* ── Left ── */}
           <div className="md:col-span-2 space-y-4">
             <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 space-y-5">
               <h3 className="font-display text-xl tracking-wider text-text-primary">
@@ -109,8 +110,7 @@ export default function Contact() {
                 { icon: <Phone className="w-5 h-5" />, label: "Hotline", value: "+91 8951511111", href: "tel:+918951511111" },
                 { icon: <MapPin className="w-5 h-5" />, label: "Office", value: "SurePass Academy, #7-9, II Floor, Manasa Towers, MG Road, Mangalore 575003", href: MAPS_URL },
               ].map((item, i) => (
-                <a key={i} href={item.href} target={i === 2 ? "_blank" : undefined}
-                  rel="noreferrer"
+                <a key={i} href={item.href} target={i === 2 ? "_blank" : undefined} rel="noreferrer"
                   className="flex items-start gap-3 group hover:opacity-80 transition-opacity">
                   <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:bg-primary/20 transition-all">
                     {item.icon}
@@ -123,7 +123,7 @@ export default function Contact() {
               ))}
             </div>
 
-            {/* ── Custom Styled Map ── */}
+            {/* ── Map ── */}
             <div className="bg-surface-elevated border border-primary/20 rounded-2xl overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
               <div className="px-4 pt-4 pb-2 flex items-center justify-between">
@@ -137,23 +137,18 @@ export default function Contact() {
                 </a>
               </div>
 
-              {/* Dark styled Google Maps embed */}
               <div className="relative mx-4 mb-4 rounded-xl overflow-hidden border border-surface-border" style={{ height: 220 }}>
-                {/* Dark overlay tint to match theme */}
-                <div className="absolute inset-0 z-10 pointer-events-none"
-                  style={{ background: "linear-gradient(135deg, rgba(0,212,255,0.04) 0%, transparent 100%)", mixBlendMode: "overlay" }} />
                 <iframe
                   title="SurePass Academy Location"
                   width="100%"
                   height="100%"
                   frameBorder="0"
-                  style={{ filter: "invert(90%) hue-rotate(180deg) saturate(0.8) brightness(0.85)" }}
-                  src={`https://maps.google.com/maps?q=${LAT},${LON}&z=16&output=embed`}
+                  style={{ filter: "invert(90%) hue-rotate(180deg) saturate(0.7) brightness(0.85)" }}
+                  src={`https://maps.google.com/maps?q=SurePass+Academy+Mangalore&ll=${LAT},${LON}&z=17&output=embed`}
                   allowFullScreen
                 />
               </div>
 
-              {/* Location label */}
               <a href={MAPS_URL} target="_blank" rel="noreferrer"
                 className="mx-4 mb-4 flex items-center justify-between bg-surface border border-surface-border hover:border-primary/40 rounded-xl px-4 py-3 group transition-all">
                 <div>
@@ -164,14 +159,6 @@ export default function Contact() {
                   <ExternalLink className="w-3.5 h-3.5" />
                 </div>
               </a>
-            </div>
-
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
-              <Shield className="w-6 h-6 text-primary mb-3" />
-              <p className="font-body text-sm text-text-secondary leading-relaxed">
-                All communications are encrypted and logged for security purposes.
-                Please use your official government email when contacting us.
-              </p>
             </div>
           </div>
 
@@ -205,41 +192,20 @@ export default function Contact() {
                       placeholder="Describe your issue or query..."
                       className="w-full bg-surface border border-surface-border rounded-lg px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none" />
                   </div>
+
                   <button type="submit"
                     className="w-full px-6 py-3.5 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" /> Send Message
                   </button>
 
-                  {/* Divider */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="flex-1 h-px bg-surface-border" />
-                    <span className="font-mono text-xs text-text-muted uppercase tracking-wider">or reach us directly</span>
-                    <div className="flex-1 h-px bg-surface-border" />
+                  {/* Security note below button */}
+                  <div className="flex items-start gap-3 bg-surface border border-surface-border rounded-xl px-4 py-3">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <p className="font-body text-xs text-text-muted leading-relaxed">
+                      All communications are encrypted and logged for security purposes.
+                      Please use your official government email when contacting us.
+                    </p>
                   </div>
-
-                  {/* Quick Contact Buttons */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <a href="mailto:educatorananth@gmail.com"
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-surface border border-surface-border rounded-lg hover:border-primary/40 hover:text-primary text-text-secondary transition-all group">
-                      <Mail className="w-4 h-4 text-primary" />
-                      <span className="font-body text-sm">Email Us</span>
-                    </a>
-                    <a href="tel:+918951511111"
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-surface border border-surface-border rounded-lg hover:border-primary/40 hover:text-primary text-text-secondary transition-all group">
-                      <Phone className="w-4 h-4 text-primary" />
-                      <span className="font-body text-sm">Call Us</span>
-                    </a>
-                  </div>
-
-                  {/* Response time info */}
-                  <div className="bg-surface border border-surface-border rounded-xl px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
-                      <span className="font-body text-xs text-text-muted">Average response time</span>
-                    </div>
-                    <span className="font-mono text-xs text-primary font-semibold">within 24hrs</span>
-                  </div>
-
                 </form>
               )}
             </div>
