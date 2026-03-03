@@ -209,6 +209,37 @@ export default function Contact() {
                     className="w-full px-6 py-3.5 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" /> Send Message
                   </button>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="flex-1 h-px bg-surface-border" />
+                    <span className="font-mono text-xs text-text-muted uppercase tracking-wider">or reach us directly</span>
+                    <div className="flex-1 h-px bg-surface-border" />
+                  </div>
+
+                  {/* Quick Contact Buttons */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <a href="mailto:educatorananth@gmail.com"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-surface border border-surface-border rounded-lg hover:border-primary/40 hover:text-primary text-text-secondary transition-all group">
+                      <Mail className="w-4 h-4 text-primary" />
+                      <span className="font-body text-sm">Email Us</span>
+                    </a>
+                    <a href="tel:+918951511111"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-surface border border-surface-border rounded-lg hover:border-primary/40 hover:text-primary text-text-secondary transition-all group">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <span className="font-body text-sm">Call Us</span>
+                    </a>
+                  </div>
+
+                  {/* Response time info */}
+                  <div className="bg-surface border border-surface-border rounded-xl px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
+                      <span className="font-body text-xs text-text-muted">Average response time</span>
+                    </div>
+                    <span className="font-mono text-xs text-primary font-semibold">within 24hrs</span>
+                  </div>
+
                 </form>
               )}
             </div>
