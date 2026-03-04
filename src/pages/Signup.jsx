@@ -130,10 +130,10 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 pt-16 pb-8">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4 pt-28 pb-8">
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20 pointer-events-none" />
       <div className="relative w-full max-w-lg">
-        <div className="bg-surface-elevated border border-surface-border rounded-2xl p-8 shadow-card">
+        <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 shadow-card">
 
           {/* Header */}
           <div className="text-center mb-8">
