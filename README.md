@@ -1,70 +1,237 @@
-# Getting Started with Create React App
+# 🛡️ Traxelon — Law Enforcement Intelligence Tool
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Traxelon is a covert link-based tracking system built for authorized law enforcement officers. Officers can generate disguised tracking links, send them to suspects, and capture device intelligence (IP, GPS, browser fingerprint) the moment the link is clicked.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🏗️ Project Structure
 
-### `npm start`
+```
+traxalon/
+│
+├── backend/                        # Node.js + Express API server
+│   ├── firebase/
+│   │   └── config.js               # Firebase Admin SDK initialization
+│   ├── routes/
+│   │   ├── auth.js                 # OTP send/verify endpoints
+│   │   └── links.js                # Tracking link endpoints
+│   ├── utils/
+│   │   ├── brevoService.js         # Brevo email sending logic
+│   │   ├── linkService.js          # Link generation helpers
+│   │   └── otpStore.js             # In-memory OTP storage
+│   ├── .env                        # Backend environment variables (never commit)
+│   ├── .gitignore
+│   ├── package.json
+│   ├── server.js                   # Entry point
+│   └── TrackingCapture.jsx         # Tracking capture page served by backend
+│
+├── public/                         # Static assets
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── sir.jpg
+│
+├── src/                            # React frontend source
+│   ├── components/
+│   │   ├── Navbar.jsx              # Top navigation (auth-aware)
+│   │   └── ProtectedRoute.jsx      # Route guard for logged-in users
+│   ├── contexts/
+│   │   └── AuthContext.jsx         # Firebase auth state management
+│   ├── firebase/
+│   │   └── config.js               # Firebase client SDK config
+│   ├── hooks/
+│   │   └── useGeoGrabber.js        # Hook for capturing GPS/device data
+│   ├── pages/
+│   │   ├── About.jsx
+│   │   ├── Contact.jsx
+│   │   ├── Dashboard.jsx           # Officer command center
+│   │   ├── Home.jsx
+│   │   ├── Login.jsx
+│   │   ├── Signup.jsx              # 3-step OTP registration
+│   │   ├── TermsAndConditions.jsx
+│   │   └── TrackingCapture.jsx     # Page opened by suspect (captures data)
+│   ├── utils/
+│   │   ├── linkService.js
+│   │   └── otpService.js
+│   ├── App.jsx                     # Routes definition
+│   ├── index.css                   # Global styles + Tailwind
+│   └── index.js                    # React entry point
+│
+├── .env                            # Frontend environment variables (never commit)
+├── .env.local
+├── .gitignore
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js              # Tailwind + custom fonts/colors
+├── vercel.json                     # Vercel deployment config
+└── README.md
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## ⚙️ Tech Stack
 
-### `npm test`
+| Layer | Technology |
+|---|---|
+| Frontend | React, Tailwind CSS, React Router |
+| Auth | Firebase Authentication + Firestore |
+| Backend | Node.js, Express.js |
+| Email OTP | Brevo (Sendinblue) API |
+| Hosting (Frontend) | Vercel |
+| Hosting (Backend) | Render / Railway |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🚀 Running the Project Locally
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Prerequisites
+Make sure you have the following installed:
+- **Node.js** v18 or above → [Download](https://nodejs.org)
+- **npm** (comes with Node.js)
+- A **Firebase** project with Firestore and Authentication enabled
+- A **Brevo** account for sending OTP emails
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Step 1 — Unzip and Open the Project
 
-### `npm run eject`
+Extract the zip file. You will see the `backend/`, `src/`, `public/` folders and config files at the root level.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Step 2 — Set Up the Backend
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### Navigate to the backend folder:
+```bash
+cd backend
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#### Install dependencies:
+```bash
+npm install
+```
 
-## Learn More
+#### Create a `.env` file inside the `backend/` folder:
+```env
+FIREBASE_PROJECT_ID="your-firebase-project-id"
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END PRIVATE KEY-----\n"
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+FRONTEND_URL=http://localhost:3000
+PORT=5001
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+BREVO_API_KEY=your_brevo_api_key_here
+BREVO_SENDER_EMAIL=your_sender_email@example.com
+BREVO_SENDER_NAME=Traxelon
+```
 
-### Code Splitting
+> ⚠️ To get Firebase credentials: Firebase Console → Project Settings → Service Accounts → Generate new private key → copy values from the downloaded JSON into the `.env` fields above.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+> ⚠️ To get Brevo API key: brevo.com → Account → SMTP & API → API Keys → Generate new key.
 
-### Analyzing the Bundle Size
+#### Start the backend server:
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+You should see:
+```
+🚀 Traxelon backend running on http://localhost:5001
+```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Step 3 — Set Up the Frontend
 
-### Advanced Configuration
+#### Open a new terminal and go back to the root project folder:
+```bash
+cd ..
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+#### Install dependencies:
+```bash
+npm install
+```
 
-### Deployment
+#### Create a `.env` file in the root folder:
+```env
+REACT_APP_BACKEND_URL=http://localhost:5001
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your-firebase-project-id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
+```
 
-### `npm run build` fails to minify
+> ⚠️ To get Firebase frontend config: Firebase Console → Project Settings → Your Apps → Web App → SDK setup and configuration.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+#### Start the frontend:
+```bash
+npm start
+```
+
+The app will open at **http://localhost:3000**
+
+---
+
+## 🔐 How Authentication Works
+
+1. Officer fills in the registration form and clicks **Send Verification OTP**
+2. Backend sends a 6-digit OTP to the officer's email via Brevo
+3. Officer enters the OTP to verify their email
+4. Firebase account is created and officer is automatically logged in
+5. For subsequent logins, officer uses email + password directly via Firebase Auth
+
+---
+
+## 🌐 Deployment
+
+### Frontend → Vercel
+1. Push code to GitHub
+2. Import repo in [vercel.com](https://vercel.com)
+3. Add all `REACT_APP_*` environment variables in Vercel Dashboard → Settings → Environment Variables
+4. Deploy
+
+### Backend → Render
+1. Push backend folder to GitHub (or as a separate repo)
+2. Create a new **Web Service** in [render.com](https://render.com)
+3. Set build command: `npm install`
+4. Set start command: `node server.js`
+5. Add all backend `.env` variables in the Render dashboard
+6. Deploy and copy the live URL
+7. Update `REACT_APP_BACKEND_URL` in Vercel to your Render backend URL and redeploy
+
+---
+
+## ⚠️ Important Security Notes
+
+- **Never commit `.env` files to GitHub** — they are listed in `.gitignore`
+- **Never share your Firebase private key or Brevo API key** publicly
+- Both `.env` files must be manually created on any new machine
+- Do not commit `serviceAccountKey.json` — use `.env` variables instead
+
+---
+
+## 📁 Key Files Reference
+
+| File | Purpose |
+|---|---|
+| `src/contexts/AuthContext.jsx` | Manages login, signup, logout, user state |
+| `src/components/Navbar.jsx` | Top navigation with auth-aware UI |
+| `src/pages/Signup.jsx` | 3-step OTP registration flow |
+| `src/pages/Login.jsx` | Officer login page |
+| `src/pages/Dashboard.jsx` | Main officer command center |
+| `src/pages/TrackingCapture.jsx` | Page that captures suspect device data |
+| `backend/server.js` | Express server entry point |
+| `backend/routes/auth.js` | OTP send/verify API endpoints |
+| `backend/routes/links.js` | Tracking link generation endpoints |
+| `backend/firebase/config.js` | Firebase Admin SDK initialization |
+| `backend/utils/brevoService.js` | Brevo email sending logic |
+| `tailwind.config.js` | Custom fonts, colors, and Tailwind theme |
+
+---
+
+*© 2026 Traxelon. Authorized law enforcement use only.*
