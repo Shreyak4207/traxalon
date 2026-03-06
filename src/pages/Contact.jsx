@@ -226,6 +226,7 @@ export default function Contact() {
           <div className="flex gap-6">
             <Link to="/" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Home</Link>
             <Link to="/about" className="font-body text-xs text-text-muted hover:text-primary transition-colors">About</Link>
+            <Link to="/terms" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Terms and Conditions</Link>
           </div>
         </div>
       </footer>

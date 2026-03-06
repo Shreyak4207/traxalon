@@ -298,6 +298,8 @@ export default function About() {
           <div className="flex gap-6">
             <a href="/" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Home</a>
             <a href="/contact" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Contact</a>
+            <a href="/terms" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Terms and Conditions</a>
+            
           </div>
         </div>
       </footer>
