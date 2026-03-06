@@ -97,7 +97,7 @@ export default function TermsAndConditions() {
           </div>
 
           <h1 className="font-display text-5xl md:text-6xl text-text-primary leading-none mb-6 tracking-wider">
-            TERMS &emp; <span className="text-primary" style={{ textShadow: "0 0 40px rgba(0,212,255,0.5)" }}>
+            TERMS &amp; <span className="text-primary" style={{ textShadow: "0 0 40px rgba(0,212,255,0.5)" }}>
               CONDITIONS
             </span>
           </h1>
