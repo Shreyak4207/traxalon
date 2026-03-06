@@ -162,7 +162,7 @@ export async function sendOtpEmail(toEmail, otp) {
                  padding: 40px 48px 40px;">
         <p style="font-family:'Orbitron',monospace; font-size:14px; font-weight:700;
                    letter-spacing:5px; color:#2a4a6a; margin-bottom:20px;">
-          ◈ TRAXELON
+          <Shield className="w-7 h-7 text-primary" />◈ TRAXELON
         </p>
         <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 24px;">
           <tr>
