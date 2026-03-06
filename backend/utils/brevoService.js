@@ -162,7 +162,11 @@ export async function sendOtpEmail(toEmail, otp) {
                  padding: 40px 48px 40px;">
         <p style="font-family:'Orbitron',monospace; font-size:14px; font-weight:700;
                    letter-spacing:5px; color:#2a4a6a; margin-bottom:20px;">
-          <Shield className="w-7 h-7 text-primary" />◈ TRAXELON
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+     fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+</svg>
+          ◈ TRAXELON
         </p>
         <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 24px;">
           <tr>
