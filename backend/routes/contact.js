@@ -34,8 +34,8 @@ if (!captchaResponse.data.success) {
         email: process.env.BREVO_SENDER_EMAIL, 
       },
       to: [{ 
-        email: "kshreya4207@gmail.com", 
-        name: "Shreya",
+        email: "shravanu.k887@gmail.com", 
+        name: "Traxelon",
       }],
       subject: `[Traxelon Contact] ${form.subject}`,
       htmlContent: `
@@ -94,5 +94,6 @@ if (!captchaResponse.data.success) {
     });
   }
 });
+
 
 export default router;
