@@ -138,7 +138,7 @@ export default function Contact() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-5 gap-8 items-start">
+        <div className="grid md:grid-cols-5 gap-8 items-stretch">
 
           <div className="md:col-span-2 flex flex-col gap-4">
             <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 space-y-5">
@@ -163,7 +163,7 @@ export default function Contact() {
               ))}
             </div>
 
-            <div className="bg-surface-elevated border border-primary/20 rounded-2xl overflow-hidden flex-1">
+            <div className="bg-surface-elevated border border-primary/20 rounded-2xl overflow-hidden flex-1 flex flex-col">
               <div className="h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
               <div className="px-4 pt-4 pb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export default function Contact() {
               </div>
               <a href={MAPS_URL} target="_blank" rel="noreferrer"
                 className="relative mx-4 mb-4 rounded-xl overflow-hidden border border-surface-border block"
-                style={{ height: 380 }}>
+                style={{ minHeight: 380, height: "100%" }}>
                 <iframe
                   title="Traxelon Location"
                   width="100%"
