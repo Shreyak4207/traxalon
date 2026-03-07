@@ -42,7 +42,16 @@ function StatCard({ numericValue, suffix, label }) {
     </div>
   );
 }
-
+function AchievementStat({ icon, numericValue, suffix, label }) {
+  const [count, ref] = useCountUp(numericValue);
+  return (
+    <div ref={ref} className="bg-surface border border-surface-border rounded-xl p-4 text-center hover:border-primary/30 transition-all">
+      <div className="flex items-center justify-center text-primary mb-2">{icon}</div>
+      <div className="font-display text-2xl text-primary">{count}{suffix}</div>
+      <div className="font-body text-xs text-text-muted mt-1">{label}</div>
+    </div>
+  );
+}
 export default function About() {
   const [expanded, setExpanded] = useState(false);
   const canvasRef = useRef(null);
@@ -215,21 +224,14 @@ export default function About() {
 
               <div className="h-px bg-surface-border my-8" />
 
-              {/* Achievement Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[
-                  { icon: <BookOpen className="w-4 h-4" />, value: "17", label: "Books Authored" },
-                  { icon: <Globe className="w-4 h-4" />, value: "32", label: "Int'l Journals" },
-                  { icon: <Award className="w-4 h-4" />, value: "3", label: "Patents Held" },
-                  { icon: <Mic className="w-4 h-4" />, value: "3,000+", label: "Lectures Delivered" },
-                ].map((stat) => (
-                  <div key={stat.label} className="bg-surface border border-surface-border rounded-xl p-4 text-center hover:border-primary/30 transition-all">
-                    <div className="flex items-center justify-center text-primary mb-2">{stat.icon}</div>
-                    <div className="font-display text-2xl text-primary">{stat.value}</div>
-                    <div className="font-body text-xs text-text-muted mt-1">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
+             {/* Achievement Stats */}
+              
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <AchievementStat icon={<BookOpen className="w-4 h-4" />} numericValue={17} suffix="" label="Books Authored" />
+  <AchievementStat icon={<Globe className="w-4 h-4" />} numericValue={32} suffix="" label="Int'l Journals" />
+  <AchievementStat icon={<Award className="w-4 h-4" />} numericValue={3} suffix="" label="Patents Held" />
+  <AchievementStat icon={<Mic className="w-4 h-4" />} numericValue={3000} suffix="+" label="Lectures Delivered" />
+</div>
 
               {/* Bio */}
               <div className="bg-surface border border-surface-border rounded-2xl p-6">
