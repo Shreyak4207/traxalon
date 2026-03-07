@@ -207,7 +207,7 @@ export default function TermsAndConditions() {
           <p className="font-body text-sm text-text-muted">
             For legal inquiries regarding these Terms, contact:{" "}
             <a href="mailto:support@traxalon.gov.in" className="text-primary hover:underline">
-              support@traxalon.gov.in
+              support@traxalon.com
             </a>
             {" "}· Torsecure Cyber LLP ,Door No. 4-9-765/17, Second Floor, Manasa Towers, MG Road, Kodialbail, Mangalore, Karnataka
           </p>
