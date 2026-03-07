@@ -15,7 +15,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-src 'self' https://www.google.com https://maps.google.com https://maps.googleapis.com;"
+          "value": "frame-src 'self' https://www.google.com https://maps.google.com https://maps.googleapis.com https://hcaptcha.com https://*.hcaptcha.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; connect-src 'self' https://hcaptcha.com https://*.hcaptcha.com;"
         }
       ]
     }
