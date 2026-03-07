@@ -180,7 +180,7 @@ export default function Login() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted w-4 h-4" />
                   <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="officer@police.gov.in" required
+                    placeholder="officer@traxelon.com" required
                     className="w-full bg-surface border border-surface-border rounded-lg pl-10 pr-4 py-3 font-body text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <button type="submit" disabled={forgotLoading}
