@@ -201,18 +201,18 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-  const result = await signInWithEmailAndPassword(auth, email, password);
-  await result.user.reload();
-  const freshUser = auth.currentUser;
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    await result.user.reload();
+    const freshUser = auth.currentUser;
 
-  await setDoc(doc(db, "users", freshUser.uid), {
-    lastSeen: serverTimestamp(),
-  }, { merge: true });
+    await setDoc(doc(db, "users", freshUser.uid), {
+      lastSeen: serverTimestamp(),
+    }, { merge: true });
 
-  setCurrentUser(freshUser);
-  await fetchUserProfile(freshUser.uid);
-  return freshUser;
-}
+    setCurrentUser(freshUser);
+    await fetchUserProfile(freshUser.uid);
+    return freshUser;
+  }
 
   async function logout() {
     setUserProfile(null);
@@ -238,24 +238,24 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      await user.reload();
-      const freshUser = auth.currentUser;
-      setCurrentUser(freshUser);
-      await fetchUserProfile(freshUser.uid);
-    } else {
-      setCurrentUser(null);
-    }
-    setLoading(false);
-  });
-  return unsubscribe;
-}, []);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await user.reload();
+        const freshUser = auth.currentUser;
+        setCurrentUser(freshUser);
+        await fetchUserProfile(freshUser.uid);
+      } else {
+        setCurrentUser(null);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
 
   const value = {
     currentUser,
     userProfile,
-    isAuthenticated: !!currentUser, 
+    isAuthenticated: !!currentUser,
     signup,
     login,
     logout,
