@@ -192,7 +192,7 @@ export function AuthProvider({ children }) {
       displayName,
       badgeId,
       department,
-      credits: 5,
+      credits: 1,
       role: "officer",
       createdAt: serverTimestamp(),
       totalLinksGenerated: 0,
