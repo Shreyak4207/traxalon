@@ -246,7 +246,7 @@ export default function About() {
                 {expanded && (
                   <div className="mt-4 space-y-3 text-sm text-text-secondary font-body leading-relaxed">
                     <p>He also holds a Diploma in Cyber Law from Government Law College, Mumbai. Under his guidance, four research scholars have completed their PhDs, and five are currently pursuing their doctoral studies.</p>
-                    <p>Dr. Prabhu is the Director of <span className="text-primary font-semibold">TorSecure Cyber LLP</span> and <span className="text-primary font-semibold">SurePass Academy</span>. A dynamic speaker, he has delivered over 3,000 lectures, becoming a leading voice in cyber law and forensics.</p>
+                   <p>Dr. Prabhu is the Director of <a href="https://www.torsecure.com/" target="_blank" rel="noreferrer" className="text-primary font-semibold hover:underline">TorSecure Cyber LLP</a> and <a href="https://thesurepass.com/" target="_blank" rel="noreferrer" className="text-primary font-semibold hover:underline">SurePass Academy</a>. A dynamic speaker, he has delivered over 3,000 lectures, becoming a leading voice in cyber law and forensics.</p>
                     <p>His acclaimed book <span className="text-primary font-semibold">Cyber Safe Girl v6.1</span> has been downloaded <span className="text-primary font-semibold">4.5 crore times</span>. A free online certification course developed in partnership with <span className="text-primary font-semibold">ISEA</span> and the <span className="text-primary font-semibold">Ministry of Electronics and IT</span> has empowered citizens across India — especially in rural areas — with cyber literacy.</p>
                   </div>
                 )}
