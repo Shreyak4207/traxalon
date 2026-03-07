@@ -318,7 +318,7 @@ async function handleSubmit(e) {
       </footer>
     </div>
   );
-}
+
 
 function FormInput({ label, name, type = "text", value, onChange, placeholder, required }) {
   return (
@@ -329,6 +329,7 @@ function FormInput({ label, name, type = "text", value, onChange, placeholder, r
     </div>
   );
 }
+
 
 
 
