@@ -2,10 +2,14 @@ import React, { useRef, useEffect, useState } from "react";
 import { Mail, MapPin, Send, Shield, Activity, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", badge: "", subject: "", message: "" });
   const [sent, setSent] = useState(false);
+  const hcaptchaRef = useRef(null);//changes 
+const [captchaToken, setCaptchaToken] = useState(null);//changes
+const [attachment, setAttachment] = useState(null);//changes
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -56,10 +60,66 @@ export default function Contact() {
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
-  function handleSubmit(e) {
-    e.preventDefault();
-    setSent(true);
+  async function handleFileChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert("File too large. Please attach a file under 5MB.");
+    e.target.value = "";
+    return;
   }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result.split(",")[1];
+    setAttachment({ content: base64, name: file.name, type: file.type });
+  };
+  reader.readAsDataURL(file);
+}
+
+  const [sending, setSending] = useState(false);
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  
+  if (!captchaToken) {
+    alert("Please complete the captcha first.");
+    return;
+  }
+  
+  setSending(true);
+  
+  try {
+    const BASE_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+    const response = await fetch(`${BASE_URL}/api/contact/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+      form,
+      captchaToken,
+      attachment: attachment,
+}),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setSent(true);
+      setAttachment(null);//changes 
+      setForm({ name: "", email: "", badge: "", subject: "", message: "" });
+    } else {
+      alert(data.error || "Failed to send. Please try again.");
+    }
+  } catch (err) {
+    console.error("Contact form error:", err);
+    alert("Something went wrong. Please try again.");
+  } finally {
+  setSending(false);
+  hcaptchaRef.current?.resetCaptcha();
+  setCaptchaToken(null);
+}
+}}
 
   const LAT = 12.8766748;
   const LON = 74.8415473;
@@ -192,7 +252,33 @@ export default function Contact() {
                       placeholder="Describe your issue or query..."
                       className="w-full bg-surface border border-surface-border rounded-lg px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none" />
                   </div>
-
+                  {/* File Attachment */}
+                  <div>
+                    <label className="block font-body text-xs text-text-secondary uppercase tracking-wider mb-1.5">
+                      Attachment <span className="text-text-muted normal-case">(optional · image, PDF, doc · max 5MB)</span>
+                    </label>
+                    <label className="flex items-center gap-3 w-full bg-surface border border-surface-border rounded-lg px-4 py-3 cursor-pointer hover:border-primary transition-colors group">
+                      <Paperclip className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors flex-shrink-0" />
+                      <span className="font-body text-sm text-text-muted group-hover:text-primary transition-colors truncate">
+                        {attachment ? attachment.name : "Choose file..."}
+                      </span>
+                      <input type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleFileChange} className="hidden" />
+                    </label>
+                    {attachment && (
+                      <button type="button" onClick={() => setAttachment(null)}
+                        className="mt-1.5 flex items-center gap-1 font-body text-xs text-text-muted hover:text-red-400 transition-colors">
+                        <X className="w-3 h-3" /> Remove attachment
+                      </button>
+                    )}
+                  </div>
+                  
+<HCaptcha
+  sitekey="2c7ab4e4-6cd4-43fa-9416-57f458ea07c6"
+  onVerify={(token) => setCaptchaToken(token)}
+  onExpire={() => setCaptchaToken(null)}
+  ref={hcaptchaRef}
+  theme="dark"
+/>
                   <button type="submit"
                     className="w-full px-6 py-3.5 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" /> Send Message
