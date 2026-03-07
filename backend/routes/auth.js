@@ -8,6 +8,8 @@ import {
   MAX_ATTEMPTS,
 } from "../utils/otpStore.js";
 import { sendOtpEmail } from "../utils/brevoService.js";
+import { sendResetEmail } from "../utils/resetEmailService.js";
+import { auth as adminAuth } from "../firebase/config.js";
 
 const router = express.Router();
 
@@ -77,6 +79,29 @@ router.post("/verify-otp", async (req, res) => {
   } catch (err) {
     console.error("[POST /verify-otp]", err.message);
     return res.status(500).json({ error: "Verification failed. Please try again." });
+  }
+});
+
+// ── POST /api/auth/send-reset-email ──────────────────────────
+router.post("/send-reset-email", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "A valid email is required." });
+    }
+
+    // Generate a Firebase password-reset link via Admin SDK
+    const resetLink = await adminAuth.generatePasswordResetLink(email);
+
+    // Send it via your branded Brevo email instead of Firebase's default
+    await sendResetEmail(email, resetLink);
+
+    console.log(`[Reset] Password reset email sent to ${email}`);
+    return res.status(200).json({ success: true, message: "Password reset email sent." });
+
+  } catch (err) {
+    console.error("[POST /send-reset-email]", err.message);
+    return res.status(500).json({ error: err.message });
   }
 });
 

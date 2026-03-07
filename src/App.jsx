@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import TrackingCapture from "./pages/TrackingCapture";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import ResetPassword from "./pages/ResetPassword";
 
 export default function App() {
   return (
@@ -22,7 +23,7 @@ export default function App() {
           {/* Tracking link route - no navbar */}
           <Route path="/t/:token" element={<TrackingCapture />} />
 
-          
+
 
           {/* All normal routes WITH navbar */}
           <Route
@@ -37,6 +38,7 @@ export default function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/terms" element={<TermsAndConditions />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route
                     path="/dashboard"
                     element={

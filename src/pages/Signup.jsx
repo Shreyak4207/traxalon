@@ -21,7 +21,7 @@ function getPasswordStrength(password) {
   return { label: "Strong", color: "bg-green-500", textColor: "text-green-400", width: "w-full" };
 }
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 const OTP_RESEND_COOLDOWN = 60;
 
 export default function Signup() {
