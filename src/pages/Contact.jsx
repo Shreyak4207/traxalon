@@ -219,7 +219,7 @@ export default function Contact() {
                     <FormInput label="Full Name" name="name" value={form.name} onChange={handleChange} placeholder="Officer Name" required />
                     <FormInput label="Badge ID" name="badge" value={form.badge} onChange={handleChange} placeholder="KA-2024-001" />
                   </div>
-                  <FormInput label="Official Email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="officer@police.gov.in" required />
+                  <FormInput label="Official Email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="officer@traxelon.com" required />
                   <FormInput label="Subject" name="subject" value={form.subject} onChange={handleChange} placeholder="Technical issue / New registration / Other" required />
                   <div>
                     <label className="block font-body text-xs text-text-secondary uppercase tracking-wider mb-1.5">Message</label>
