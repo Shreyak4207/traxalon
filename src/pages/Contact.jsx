@@ -110,7 +110,7 @@ export default function Contact() {
     }
   }
 
-  const MAPS_URL = `https://www.google.com/maps/place/SURE+PASS/@12.8766748,74.8415473,17z`;
+  const MAPS_URL = `https://www.google.com/maps/place/SURE+PASS/@12.8766748,74.8415473,19z/data=!3m1!4b1!4m6!3m5!1s0x3ba35b2bfc57f253:0xa31ea1109925b56a!8m2!3d12.8766748!4d74.8415473!16s%2Fg%2F11cs6s4wt4`;
 
   return (
     <div className="min-h-screen bg-surface text-text-primary overflow-hidden">
@@ -187,7 +187,7 @@ export default function Contact() {
                     filter: "invert(90%) hue-rotate(180deg) saturate(0.7) brightness(0.85)",
                     pointerEvents: "none",
                   }}
-                  src={`https://maps.google.com/maps?q=12.8766748,74.8415473&ll=12.8766748,74.8415473&z=17&output=embed`}
+                  src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d255.30228749418472!2d74.84159297539611!3d12.876787775214574!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba35b2bfc57f253%3A0xa31ea1109925b56a!2sSURE%20PASS!5e0!3m2!1sen!2sin!4v1772877354907!5m2!1sen!2sin`}
                   allowFullScreen
                 />
                 <div className="absolute bottom-3 right-3 bg-surface/90 border border-primary/30 rounded-lg px-3 py-1.5 flex items-center gap-1.5 backdrop-blur-sm">
