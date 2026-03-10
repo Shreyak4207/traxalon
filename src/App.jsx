@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -14,44 +13,41 @@ import TrackingCapture from "./pages/TrackingCapture";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ResetPassword from "./pages/ResetPassword";
 
+function WithNavbar({ children }) {
+  return (
+    <div className="min-h-screen bg-surface">
+      <Navbar />
+      {children}
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
-
-          {/* Tracking link route - no navbar */}
+          {/* Tracking link - no navbar */}
           <Route path="/t/:token" element={<TrackingCapture />} />
 
-
-
-          {/* All normal routes WITH navbar */}
+          {/* All routes with navbar */}
+          <Route path="/" element={<WithNavbar><Home /></WithNavbar>} />
+          <Route path="/login" element={<WithNavbar><Login /></WithNavbar>} />
+          <Route path="/signup" element={<WithNavbar><Signup /></WithNavbar>} />
+          <Route path="/about" element={<WithNavbar><About /></WithNavbar>} />
+          <Route path="/contact" element={<WithNavbar><Contact /></WithNavbar>} />
+          <Route path="/terms" element={<WithNavbar><TermsAndConditions /></WithNavbar>} />
+          <Route path="/reset-password" element={<WithNavbar><ResetPassword /></WithNavbar>} />
           <Route
-            path="*"
+            path="/dashboard"
             element={
-              <div className="min-h-screen bg-surface">
-                <Navbar />
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/terms" element={<TermsAndConditions />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </div>
+              <WithNavbar>
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              </WithNavbar>
             }
           />
-
         </Routes>
       </AuthProvider>
     </Router>
