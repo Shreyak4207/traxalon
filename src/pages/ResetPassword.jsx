@@ -18,7 +18,7 @@ function getPasswordStrength(password) {
 }
 
 export default function ResetPassword() {
-  const { confirmReset } = useAuth();
+  const { confirmReset, logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -30,19 +30,11 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Firebase passes oobCode in the URL query string
   const oobCode = searchParams.get("oobCode");
 
-  // useEffect(() => {
-  //   if (!oobCode) {
-  //     setError("Invalid or expired reset link. Please request a new one.");
-  //   }
-  // }, [oobCode]);
-
-
   useEffect(() => {
-    console.log("oobCode:", oobCode);
-    console.log("full URL:", window.location.href);
+    // Sign out user so reset page renders properly
+    logout();
     if (!oobCode) {
       setError("Invalid or expired reset link. Please request a new one.");
     }
