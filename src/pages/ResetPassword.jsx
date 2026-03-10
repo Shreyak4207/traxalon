@@ -33,7 +33,16 @@ export default function ResetPassword() {
   // Firebase passes oobCode in the URL query string
   const oobCode = searchParams.get("oobCode");
 
+  // useEffect(() => {
+  //   if (!oobCode) {
+  //     setError("Invalid or expired reset link. Please request a new one.");
+  //   }
+  // }, [oobCode]);
+
+
   useEffect(() => {
+    console.log("oobCode:", oobCode);
+    console.log("full URL:", window.location.href);
     if (!oobCode) {
       setError("Invalid or expired reset link. Please request a new one.");
     }
