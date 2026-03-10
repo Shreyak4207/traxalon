@@ -18,7 +18,7 @@ function getPasswordStrength(password) {
 }
 
 export default function ResetPassword() {
-  const { confirmReset, logout } = useAuth();
+  const { confirmReset } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -33,8 +33,6 @@ export default function ResetPassword() {
   const oobCode = searchParams.get("oobCode");
 
   useEffect(() => {
-    // Sign out user so reset page renders properly
-    logout();
     if (!oobCode) {
       setError("Invalid or expired reset link. Please request a new one.");
     }
