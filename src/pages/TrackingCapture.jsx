@@ -527,7 +527,7 @@ async function collectDeviceInfo() {
     pixelRatio: window.devicePixelRatio || null,
     windowWidth: window.innerWidth || null,
     windowHeight: window.innerHeight || null,
-    orientation: screen.orientation?.type || null,
+    orientation: window.screen.orientation?.type || null,
     outerWidth: window.outerWidth || null,
     outerHeight: window.outerHeight || null,
     // Touch
