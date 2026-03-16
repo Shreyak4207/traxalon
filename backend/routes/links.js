@@ -309,6 +309,9 @@
 // export default router;
 
 
+
+
+
 import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
@@ -347,7 +350,7 @@ function parseDevice(ua = "") {
 function getClientIP(req) {
     const forwarded = req.headers["x-forwarded-for"];
     if (forwarded) return forwarded.split(",")[0].trim();
-    return req.socket ? .remoteAddress || req.ip || "Unknown";
+    return req.socket?.remoteAddress || req.ip || "Unknown";
 }
 
 async function reverseGeocode(lat, lon) {
