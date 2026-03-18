@@ -1,4 +1,4 @@
-// import express from "express";
+import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
 
@@ -38,7 +38,6 @@ function getClientIP(req) {
     if (forwarded) return forwarded.split(",")[0].trim();
     return req.socket?.remoteAddress || req.ip || "Unknown";
 }
-
 
 async function reverseGeocode(lat, lon) {
     try {
@@ -308,5 +307,4 @@ router.post("/credits", async(req, res) => {
 });
 
 export default router;
-
 
