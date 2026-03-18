@@ -63,15 +63,28 @@ export default function Dashboard() {
     return "https://" + t;
   }
 
+  // async function shortenUrl(longUrl) {
+  //   try {
+  //     const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+  //     const short = await res.text();
+  //     if (short.startsWith("https://tinyurl.com/")) return short;
+  //     return longUrl;
+  //   } catch { return longUrl; }
+  // }
+
   async function shortenUrl(longUrl) {
     try {
-      const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-      const short = await res.text();
-      if (short.startsWith("https://tinyurl.com/")) return short;
-      return longUrl;
+      const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: longUrl }),
+      });
+      const data = await res.json();
+      return data.shortUrl || longUrl;
     } catch { return longUrl; }
-  }
+  } 
 
+  
   async function handleGenerate(e) {
     e.preventDefault();
     if (credits < 1) { setShowPayment(true); return; }
