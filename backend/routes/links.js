@@ -382,5 +382,25 @@ router.post("/shorten-url", async(req, res) => {
         return res.status(200).json({ shortUrl: url });
     }
 });
+
+router.post("/shorten-url", async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: "url required" });
+    const response = await axios.get(
+      "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url),
+      { timeout: 8000 }
+    );
+    const short = response.data;
+    if (short && short.startsWith("https://is.gd/")) {
+      return res.status(200).json({ shortUrl: short });
+    }
+    return res.status(200).json({ shortUrl: url });
+  } catch (err) {
+    console.error("[shorten-url]", err.message);
+    return res.status(200).json({ shortUrl: url });
+  }
+});
 export default router;
+
 
