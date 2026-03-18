@@ -143,3 +143,4 @@ export async function addCredits(uid, amount) {
         credits: admin.firestore.FieldValue.increment(amount),
     });
 }
+
