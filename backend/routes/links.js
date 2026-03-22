@@ -276,16 +276,68 @@ router.post("/capture", async(req, res) => {
     }
 });
 
-router.post("/shorten", async(req, res) => {
+// router.post("/shorten", async(req, res) => {
+//     try {
+//         const { uid, label, destinationUrl } = req.body;
+//         if (!uid) return res.status(400).json({ error: "uid is required" });
+//         if (!destinationUrl) return res.status(400).json({ error: "destinationUrl is required" });
+//         const result = await createTrackingLink(uid, label, destinationUrl);
+//         return res.status(200).json(result);
+//     } catch (err) {
+//         console.error("[POST /shorten]", err.message);
+//         return res.status(400).json({ error: err.message });
+//     }
+// });
+
+router.post("/shorten-url", async(req, res) => {
     try {
-        const { uid, label, destinationUrl } = req.body;
-        if (!uid) return res.status(400).json({ error: "uid is required" });
-        if (!destinationUrl) return res.status(400).json({ error: "destinationUrl is required" });
-        const result = await createTrackingLink(uid, label, destinationUrl);
-        return res.status(200).json(result);
+        const { url, provider } = req.body;
+        if (!url) return res.status(400).json({ error: "url required" });
+
+        let shortUrl = null;
+
+        if (provider === "isgd") {
+            try {
+                const r = await axios.get(
+                    "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 8000, headers: { "User-Agent": "Traxelon/1.0" } }
+                );
+                const result = String(r.data || "").trim();
+                if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) {
+                    shortUrl = result;
+                }
+            } catch (e) { console.error("is.gd failed:", e.message); }
+
+        } else if (provider === "vgd") {
+            try {
+                const r = await axios.get(
+                    "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 8000, headers: { "User-Agent": "Traxelon/1.0" } }
+                );
+                const result = String(r.data || "").trim();
+                if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) {
+                    shortUrl = result;
+                }
+            } catch (e) { console.error("v.gd failed:", e.message); }
+
+        } else if (provider === "tinyurl") {
+            try {
+                const r = await axios.get(
+                    "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 8000 }
+                );
+                const result = String(r.data || "").trim();
+                if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) {
+                    shortUrl = result;
+                }
+            } catch (e) { console.error("tinyurl failed:", e.message); }
+        }
+
+        if (!shortUrl) {
+            return res.status(200).json({ shortUrl: url, error: "Shortening failed, returning original" });
+        }
+
+        return res.status(200).json({ shortUrl });
     } catch (err) {
-        console.error("[POST /shorten]", err.message);
-        return res.status(400).json({ error: err.message });
+        console.error("[shorten-url]", err.message);
+        return res.status(200).json({ shortUrl: url });
     }
 });
 
@@ -479,4 +531,5 @@ router.post("/shorten-url", async(req, res) => {
     }
 });
 export default router;
+
 

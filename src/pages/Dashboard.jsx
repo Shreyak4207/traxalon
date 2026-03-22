@@ -64,6 +64,18 @@ export default function Dashboard() {
     return "https://" + t;
   }
 
+  // async function shortenUrl(longUrl, provider) {
+  //   try {
+  //     const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ url: longUrl, provider }),
+  //     });
+  //     const data = await res.json();
+  //     return data.shortUrl || longUrl;
+  //   } catch { return longUrl; }
+  // }
+
   async function shortenUrl(longUrl, provider) {
     try {
       const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
@@ -72,10 +84,15 @@ export default function Dashboard() {
         body: JSON.stringify({ url: longUrl, provider }),
       });
       const data = await res.json();
+      // If returned URL is same as original, shortening failed
+      if (data.shortUrl === longUrl) {
+        console.warn("Shortening failed for provider:", provider);
+        return longUrl;
+      }
       return data.shortUrl || longUrl;
     } catch { return longUrl; }
   }
-
+  
   async function handleGenerate(e) {
     e.preventDefault();
     if (credits < 1) { setShowPayment(true); return; }
