@@ -1,6 +1,7 @@
 ﻿import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
+import { db } from "../firebase/config.js";
 
 const router = express.Router();
 
@@ -304,3 +305,4 @@ router.post("/credits", async (req, res) => {
 });
 
 export default router;
+
