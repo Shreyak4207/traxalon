@@ -271,10 +271,11 @@ export default function Dashboard() {
                       className="bg-surface border border-surface-border text-text-primary text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
                     >
                       <option value="tinyurl">tinyurl.com (free)</option>
-                      <option value="isgd">is.gd — random (free)</option>
-                      <option value="vgd">v.gd — random (free)</option>
-                      <option value="dagd">da.gd (free)</option>
-                      <option value="isgd-json">is.gd/json (free)</option>
+<option value="isgd">is.gd (free)</option>
+<option value="vgd">v.gd (free)</option>
+<option value="dagd">da.gd (free)</option>
+<option value="linkshrink">linkshrink.dev (free)</option>
+<option value="spoome">spoo.me (free)</option>
                     </select>
                   </div>
                 </div>
