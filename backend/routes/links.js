@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
