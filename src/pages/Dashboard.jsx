@@ -443,13 +443,9 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
   function tryInitMap() {
     if (mapInstanceRef.current) return;
     if (!mapRef.current || !window.L) return;
-    // Wait until container actually has size (panel must be expanded)
     const rect = mapRef.current.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
-      if (initAttempts.current < 40) {
-        initAttempts.current++;
-        setTimeout(tryInitMap, 80);
-      }
+      if (initAttempts.current < 40) { initAttempts.current++; setTimeout(tryInitMap, 80); }
       return;
     }
     try {
@@ -469,11 +465,8 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
       polylineRef.current = polyline;
       mapInstanceRef.current = map;
       setMapLoaded(true);
-      // Fire invalidateSize multiple times to guarantee tiles render
       [100, 300, 600, 1200].forEach(ms => setTimeout(() => map.invalidateSize(), ms));
-    } catch (e) {
-      console.error("[GPSMap]", e);
-    }
+    } catch (e) { console.error("[GPSMap]", e); }
   }
 
   useEffect(() => {
@@ -502,7 +495,6 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
     };
   }, []);
 
-  // Live position update
   useEffect(() => {
     if (!mapInstanceRef.current || !markerRef.current || !liveCaptures || !window.L) return;
     const lc = liveCaptures[captureRealIndex];
@@ -519,8 +511,6 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
     mapInstanceRef.current.panTo([newLat, newLon], { animate: true, duration: 1 });
   }, [liveCaptures, captureRealIndex]);
 
-  const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-
   return (
     <div className="mb-2">
       <div className="rounded-xl overflow-hidden border border-surface-border relative" style={{ height: "260px" }}>
@@ -534,7 +524,7 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
         )}
         <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
       </div>
-      <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer"
+      <a href={`https://www.google.com/maps?q=${lat},${lon}`} target="_blank" rel="noopener noreferrer"
         className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-surface border border-surface-border rounded-lg font-body text-xs text-text-primary hover:bg-primary/10 hover:border-primary/40 transition-colors">
         <Globe className="w-3.5 h-3.5 text-primary" /> Open in Google Maps
       </a>
@@ -916,13 +906,23 @@ function PaymentModal({ onClose, uid, fetchUserProfile }) {
   const [processing, setProcessing] = React.useState(false);
   const [done, setDone] = React.useState(false);
 
+  // ✅ FIXED: removed dynamic import of backend linkService
   async function handlePurchase() {
     setProcessing(true);
     await new Promise((r) => setTimeout(r, 2000));
-    const { addCredits } = await import("../utils/linkService");
-    await addCredits(uid, plans[selected].credits);
+    try {
+      await fetch(
+        (process.env.REACT_APP_BACKEND_URL || "http://localhost:5001") + "/api/links/credits",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid, amount: plans[selected].credits }),
+        }
+      );
+    } catch (e) { console.error(e); }
     await fetchUserProfile(uid);
-    setDone(true); setProcessing(false);
+    setDone(true);
+    setProcessing(false);
   }
 
   return (
