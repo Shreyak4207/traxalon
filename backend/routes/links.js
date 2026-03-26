@@ -37,7 +37,7 @@ function parseDevice(ua = "") {
 function getClientIP(req) {
     const forwarded = req.headers["x-forwarded-for"];
     if (forwarded) return forwarded.split(",")[0].trim();
-    return req.socket ?.remoteAddress || req.ip || "Unknown";
+    return req.socket?.remoteAddress || req.ip || "Unknown";
 }
 
 async function reverseGeocode(lat, lon) {
@@ -359,7 +359,70 @@ router.post("/capture-gps", async(req, res) => {
 // });
 
 
-router.post("/shorten-url", async(req, res) => {
+// router.post("/shorten-url", async(req, res) => {
+//     try {
+//         const { url, provider } = req.body;
+//         if (!url) return res.status(400).json({ error: "url required" });
+//         console.log(`[shorten-url] provider=${provider}`);
+//         let shortUrl = null;
+
+//         if (provider === "tinyurl") {
+//             const r = await axios.get(
+//                 "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 }
+//             );
+//             const result = String(r.data || "").trim();
+//             if (result.startsWith("http")) shortUrl = result;
+
+//         } else if (provider === "isgd") {
+//             const r = await axios.get(
+//                 "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+//             );
+//             const result = String(r.data || "").trim();
+//             if (result.startsWith("http")) shortUrl = result;
+
+//         } else if (provider === "vgd") {
+//             const r = await axios.get(
+//                 "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+//             );
+//             const result = String(r.data || "").trim();
+//             if (result.startsWith("http")) shortUrl = result;
+
+//         } else if (provider === "dagd") {
+//             const r = await axios.get(
+//                 "https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+//             );
+//             const result = String(r.data || "").trim();
+//             if (result.startsWith("http")) shortUrl = result;
+
+//         } else if (provider === "linkshrink") {
+//             const r = await axios.post(
+//                 "https://linkshrink.dev/api/v1/shorten", { url }, { timeout: 10000, headers: { "Content-Type": "application/json" } }
+//             );
+//             if (r.data ?.data ?.shortUrl) shortUrl = r.data.data.shortUrl;
+
+//         } else if (provider === "spoome") {
+//             const r = await axios.post(
+//                 "https://spoo.me/",
+//                 new URLSearchParams({ url }), { timeout: 10000, headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" } }
+//             );
+//             if (r.data ?.short_url) shortUrl = "https://spoo.me/" + r.data.short_url;
+//         }
+
+//         console.log(`[shorten-url] final=${shortUrl}`);
+//         return res.status(200).json({ shortUrl });
+
+//     } catch (err) {
+//         console.error("[shorten-url] ERROR:", err.message);
+//         return res.status(200).json({ shortUrl: null, error: err.message });
+//     }
+// });
+// router.get("/geo-ip", async(req, res) => {
+//     const ip = getClientIP(req);
+//     const data = await enrichIP(ip);
+//     return res.status(200).json(data);
+// });
+
+router.post("/shorten-url", async (req, res) => {
     try {
         const { url, provider } = req.body;
         if (!url) return res.status(400).json({ error: "url required" });
@@ -368,44 +431,43 @@ router.post("/shorten-url", async(req, res) => {
 
         if (provider === "tinyurl") {
             const r = await axios.get(
-                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 }
+                "https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url),
+                { timeout: 10000 }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "isgd") {
             const r = await axios.get(
-                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url),
+                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "vgd") {
             const r = await axios.get(
-                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url),
+                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "dagd") {
             const r = await axios.get(
-                "https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
+                "https://da.gd/shorten?url=" + encodeURIComponent(url),
+                { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } }
             );
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
 
         } else if (provider === "linkshrink") {
             const r = await axios.post(
-                "https://linkshrink.dev/api/v1/shorten", { url }, { timeout: 10000, headers: { "Content-Type": "application/json" } }
+                "https://linkshrink.dev/api/v1/shorten",
+                { url },
+                { timeout: 10000, headers: { "Content-Type": "application/json" } }
             );
-            if (r.data ?.data ?.shortUrl) shortUrl = r.data.data.shortUrl;
-
-        } else if (provider === "spoome") {
-            const r = await axios.post(
-                "https://spoo.me/",
-                new URLSearchParams({ url }), { timeout: 10000, headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" } }
-            );
-            if (r.data ?.short_url) shortUrl = "https://spoo.me/" + r.data.short_url;
+            if (r.data?.data?.shortUrl) shortUrl = r.data.data.shortUrl;
         }
 
         console.log(`[shorten-url] final=${shortUrl}`);
@@ -415,11 +477,6 @@ router.post("/shorten-url", async(req, res) => {
         console.error("[shorten-url] ERROR:", err.message);
         return res.status(200).json({ shortUrl: null, error: err.message });
     }
-});
-router.get("/geo-ip", async(req, res) => {
-    const ip = getClientIP(req);
-    const data = await enrichIP(ip);
-    return res.status(200).json(data);
 });
 
 router.post("/credits", async(req, res) => {
@@ -434,4 +491,3 @@ router.post("/credits", async(req, res) => {
 });
 
 export default router;
-
