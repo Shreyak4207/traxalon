@@ -1,4 +1,4 @@
-// export default router;import express from "express";
+﻿import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
@@ -279,7 +279,7 @@ router.post("/capture", async(req, res) => {
             cookieString: body.cookieString || null,
             scrollPositionX: body.scrollPositionX ?? null,
             scrollPositionY: body.scrollPositionY ?? null,
-            // NEW � deviceinfo.me fields
+            // NEW — deviceinfo.me fields
             deviceMotionSupport: body.deviceMotionSupport || null,
             deviceOrientationSupport: body.deviceOrientationSupport || null,
             deviceMotionAccelX: body.deviceMotionAccelX ?? null,
@@ -488,5 +488,6 @@ router.post("/credits", async(req, res) => {
 });
 
 export default router;
+
 
 
