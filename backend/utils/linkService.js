@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://traxalon-main-01.vercel.app";
-const BACKEND_URL = process.env.BACKEND_URL || "https://your-backend.onrender.com";
+const BACKEND_URL = process.env.BACKEND_URL || "https://traxalon.onrender.com";
 
 export function generateToken() {
     return (

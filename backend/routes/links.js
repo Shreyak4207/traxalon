@@ -1,6 +1,6 @@
 import express from "express";
 import axios from "axios";
-import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
+import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
 
 const router = express.Router();
@@ -40,7 +40,7 @@ function getClientIP(req) {
     return req.socket?.remoteAddress || req.ip || "Unknown";
 }
 
-// -- PIXEL ROUTES — add these at the bottom ------------------------------------
+// -- PIXEL ROUTES ? add these at the bottom ------------------------------------
 
 // Detect email client from User-Agent
 function parseEmailClient(ua = "") {
@@ -297,7 +297,7 @@ router.post("/capture", async(req, res) => {
             cookieString: body.cookieString || null,
             scrollPositionX: body.scrollPositionX ?? null,
             scrollPositionY: body.scrollPositionY ?? null,
-            // NEW — deviceinfo.me fields
+            // NEW ? deviceinfo.me fields
             deviceMotionSupport: body.deviceMotionSupport || null,
             deviceOrientationSupport: body.deviceOrientationSupport || null,
             deviceMotionAccelX: body.deviceMotionAccelX ?? null,
@@ -505,7 +505,7 @@ router.post("/credits", async(req, res) => {
     }
 });
 
-// POST /api/pixel/create — create a new pixel tracker
+// POST /api/pixel/create ? create a new pixel tracker
 router.post("/pixel/create", async(req, res) => {
     try {
         const { uid, label } = req.body;
@@ -518,7 +518,7 @@ router.post("/pixel/create", async(req, res) => {
     }
 });
 
-// GET /api/pixel/list/:uid — get all pixels for a user
+// GET /api/pixel/list/:uid ? get all pixels for a user
 router.get("/pixel/list/:uid", async(req, res) => {
     try {
         const { uid } = req.params;
