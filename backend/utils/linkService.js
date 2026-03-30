@@ -1,4 +1,4 @@
-import { db } from "../firebase/config.js";
+﻿import { db } from "../firebase/config.js";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
 
@@ -71,7 +71,7 @@ export async function addCredits(uid, amount) {
     });
 }
 
-// ── PIXEL TRACKING ────────────────────────────────────────────────────────────
+// â”€â”€ PIXEL TRACKING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function createPixel(uid, label) {
     const token = generateToken();
@@ -102,6 +102,45 @@ export async function recordPixelHit(token, hitData) {
     const isRepeatOpen = uniqueIPs.includes(hitData.ip);
     const isForwarded = !isRepeatOpen && uniqueIPs.length > 0;
 
+    await docRef.update({
+        totalOpens: admin.firestore.FieldValue.increment(1),
+        uniqueIPs: isRepeatOpen ? uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),
+        hits: admin.firestore.FieldValue.arrayUnion({
+            ...hitData,
+            isRepeatOpen,
+            isForwarded,
+            openedAt: new Date().toISOString(),
+        }),
+    });
+    return true;
+}
+
+const BACKEND_URL = process.env.BACKEND_URL || "https://traxalon.onrender.com";
+
+export async function createPixel(uid, label) {
+    const token = generateToken();
+    const pixelUrl = `${BACKEND_URL}/api/links/pixel/${token}.gif`;
+    await db.collection("pixelLinks").add({
+        uid, token,
+        label: label || "Pixel Tracker",
+        pixelUrl,
+        totalOpens: 0,
+        uniqueIPs: [],
+        hits: [],
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { token, pixelUrl };
+}
+
+export async function recordPixelHit(token, hitData) {
+    const ref = db.collection("pixelLinks");
+    const snap = await ref.where("token", "==", token).get();
+    if (snap.empty) return false;
+    const docRef = ref.doc(snap.docs[0].id);
+    const existing = snap.docs[0].data();
+    const uniqueIPs = existing.uniqueIPs || [];
+    const isRepeatOpen = uniqueIPs.includes(hitData.ip);
+    const isForwarded = !isRepeatOpen && uniqueIPs.length > 0;
     await docRef.update({
         totalOpens: admin.firestore.FieldValue.increment(1),
         uniqueIPs: isRepeatOpen ? uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),

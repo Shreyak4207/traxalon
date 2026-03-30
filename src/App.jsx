@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
@@ -13,6 +13,7 @@ import TrackingCapture from "./pages/TrackingCapture";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ResetPassword from "./pages/ResetPassword";
 import PixelTracker from "./pages/PixelTracker";
+
 function WithNavbar({ children }) {
   return (
     <div className="min-h-screen bg-surface">
@@ -27,10 +28,7 @@ export default function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Tracking link - no navbar */}
           <Route path="/t/:token" element={<TrackingCapture />} />
-
-          {/* All routes with navbar */}
           <Route path="/" element={<WithNavbar><Home /></WithNavbar>} />
           <Route path="/login" element={<WithNavbar><Login /></WithNavbar>} />
           <Route path="/signup" element={<WithNavbar><Signup /></WithNavbar>} />
@@ -38,26 +36,8 @@ export default function App() {
           <Route path="/contact" element={<WithNavbar><Contact /></WithNavbar>} />
           <Route path="/terms" element={<WithNavbar><TermsAndConditions /></WithNavbar>} />
           <Route path="/reset-password" element={<WithNavbar><ResetPassword /></WithNavbar>} />
-          <Route
-  path="/pixels"
-  element={
-    <WithNavbar>
-      <ProtectedRoute>
-        <PixelTracker />
-      </ProtectedRoute>
-    </WithNavbar>
-  }
-/>
-          <Route
-            path="/dashboard"
-            element={
-              <WithNavbar>
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              </WithNavbar>
-            }
-          />
+          <Route path="/pixels" element={<WithNavbar><ProtectedRoute><PixelTracker /></ProtectedRoute></WithNavbar>} />
+          <Route path="/dashboard" element={<WithNavbar><ProtectedRoute><Dashboard /></ProtectedRoute></WithNavbar>} />
         </Routes>
       </AuthProvider>
     </Router>
