@@ -128,6 +128,7 @@ export default function Navbar() {
             <>
               <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm text-text-secondary py-2">Login</Link>
               <Link to="/signup" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">Sign Up</Link>
+              <Link to="/pixels" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">Pixel Tracker</Link>
             </>
           )}
         </div>

