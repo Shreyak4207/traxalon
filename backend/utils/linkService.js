@@ -19,7 +19,7 @@ export async function createTrackingLink(uid, label, destinationUrl) {
     const userSnap = await userRef.get();
     if (!userSnap.exists) throw new Error("User not found");
     const userData = userSnap.data();
-    if ((userData.credits ?? 0) < 1) throw new Error("Insufficient credits");
+    if ((userData.credits ? ? 0) < 1) throw new Error("Insufficient credits");
 
     const token = generateToken();
     const trackingUrl = `${FRONTEND_URL}/t/${token}`;
@@ -115,13 +115,14 @@ export async function recordPixelHit(token, hitData) {
     return true;
 }
 
-const BACKEND_URL = process.env.BACKEND_URL || "https://traxalon.onrender.com";
+
 
 export async function createPixel(uid, label) {
     const token = generateToken();
     const pixelUrl = `${BACKEND_URL}/api/links/pixel/${token}.gif`;
     await db.collection("pixelLinks").add({
-        uid, token,
+        uid,
+        token,
         label: label || "Pixel Tracker",
         pixelUrl,
         totalOpens: 0,
