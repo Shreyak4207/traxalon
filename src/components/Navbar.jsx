@@ -24,6 +24,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-surface-border bg-surface/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="relative">
               <Shield className="w-8 h-8 text-primary" />
@@ -36,21 +38,37 @@ export default function Navbar() {
             </span>
           </Link>
 
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${location.pathname === link.to
+                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                  location.pathname === link.to
                     ? "text-primary"
                     : "text-text-secondary hover:text-text-primary"
-                  }`}
+                }`}
               >
                 {link.label}
               </Link>
             ))}
+            {/* Pixel Tracker — only when logged in */}
+            {isAuthenticated && (
+              <Link
+                to="/pixels"
+                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                  location.pathname === "/pixels"
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Pixel Tracker
+              </Link>
+            )}
           </div>
 
+          {/* Desktop auth section */}
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated && userProfile ? (
               <>
@@ -94,6 +112,7 @@ export default function Navbar() {
             )}
           </div>
 
+          {/* Mobile menu button */}
           <button
             className="md:hidden text-text-secondary hover:text-text-primary"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -103,6 +122,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-surface-elevated border-b border-surface-border px-4 py-4 space-y-3">
           {navLinks.map((link) => (
@@ -117,10 +137,26 @@ export default function Navbar() {
           ))}
           {isAuthenticated && userProfile ? (
             <>
-              <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="block text-sm text-primary py-2"
+              >
                 Dashboard
               </Link>
-              <button onClick={handleLogout} className="block text-sm text-accent py-2">
+              <Link
+                to="/pixels"
+                onClick={() => setMobileOpen(false)}
+                className={`block text-sm py-2 ${
+                  location.pathname === "/pixels" ? "text-primary font-semibold" : "text-text-secondary hover:text-primary"
+                }`}
+              >
+                Pixel Tracker
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block text-sm text-accent py-2"
+              >
                 Logout
               </button>
             </>
@@ -128,7 +164,6 @@ export default function Navbar() {
             <>
               <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm text-text-secondary py-2">Login</Link>
               <Link to="/signup" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">Sign Up</Link>
-              <Link to="/pixels" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">Pixel Tracker</Link>
             </>
           )}
         </div>
