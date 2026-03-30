@@ -1,4 +1,4 @@
-﻿import { db } from "../firebase/config.js";
+import { db } from "../firebase/config.js";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
 
@@ -19,7 +19,7 @@ export async function createTrackingLink(uid, label, destinationUrl) {
     const userSnap = await userRef.get();
     if (!userSnap.exists) throw new Error("User not found");
     const userData = userSnap.data();
-    if ((userData.credits ? ? 0) < 1) throw new Error("Insufficient credits");
+    if ((userData.credits ?? 0) < 1) throw new Error("Insufficient credits");
 
     const token = generateToken();
     const trackingUrl = `${FRONTEND_URL}/t/${token}`;
@@ -71,7 +71,7 @@ export async function addCredits(uid, amount) {
     });
 }
 
-// â”€â”€ PIXEL TRACKING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PIXEL TRACKING ────────────────────────────────────────────────────────────
 
 export async function createPixel(uid, label) {
     const token = generateToken();
