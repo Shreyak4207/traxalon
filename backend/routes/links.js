@@ -40,9 +40,6 @@ function getClientIP(req) {
     return req.socket?.remoteAddress || req.ip || "Unknown";
 }
 
-// -- PIXEL ROUTES ? add these at the bottom ------------------------------------
-
-// Detect email client from User-Agent
 function parseEmailClient(ua = "") {
     if (/Googlebot|Google-Apps-Script/i.test(ua)) return "Gmail";
     if (/Outlook|microsoft.outlook/i.test(ua)) return "Outlook";
@@ -105,8 +102,10 @@ async function enrichIP(ip) {
     } catch { return {}; }
 }
 
+// -- HEALTH --------------------------------------------------------------------
 router.get("/health", (_req, res) => res.status(200).json({ ok: true }));
 
+// -- TRACKING LINK -------------------------------------------------------------
 router.post("/shorten", async(req, res) => {
     try {
         const { uid, label, destinationUrl } = req.body;
@@ -137,7 +136,6 @@ router.post("/capture", async(req, res) => {
 
         const deviceData = {
             ip,
-            // IP Location
             country: ipData.country || null,
             countryCode: ipData.countryCode || null,
             region: ipData.region || null,
@@ -153,7 +151,6 @@ router.post("/capture", async(req, res) => {
             isProxy: ipData.isProxy || null,
             isHosting: ipData.isHosting || null,
             isMobileNetwork: ipData.isMobileNetwork || null,
-            // GPS
             gpsLat: body.gpsLat || null,
             gpsLon: body.gpsLon || null,
             gpsAccuracy: body.gpsAccuracy || null,
@@ -165,7 +162,6 @@ router.post("/capture", async(req, res) => {
             gpsState: geoData.gpsState || null,
             gpsPincode: geoData.gpsPincode || null,
             gpsCountry: geoData.gpsCountry || null,
-            // Device & Browser
             browser: parseBrowser(ua),
             os: parseOS(ua),
             device: parseDevice(ua),
@@ -185,7 +181,6 @@ router.post("/capture", async(req, res) => {
             deviceModel: body.deviceModel || null,
             webdriver: body.webdriver || null,
             automationDetected: body.automationDetected || null,
-            // Hardware
             cpuCores: body.cpuCores || null,
             ram: body.ram || null,
             memoryTier: body.memoryTier || null,
@@ -199,7 +194,6 @@ router.post("/capture", async(req, res) => {
             javaEnabled: body.javaEnabled ?? null,
             pdfViewerEnabled: body.pdfViewerEnabled ?? null,
             gamepadsConnected: body.gamepadsConnected || null,
-            // GPU & WebGL
             gpu: body.gpu || null,
             gpuVendor: body.gpuVendor || null,
             webglVersion: body.webglVersion || null,
@@ -225,7 +219,6 @@ router.post("/capture", async(req, res) => {
             webglExtensionsCount: body.webglExtensionsCount || null,
             webglExtensionsList: body.webglExtensionsList || null,
             webgl2Support: body.webgl2Support ?? null,
-            // Screen & Display
             screenWidth: body.screenWidth || null,
             screenHeight: body.screenHeight || null,
             screenAvailWidth: body.screenAvailWidth || null,
@@ -254,7 +247,6 @@ router.post("/capture", async(req, res) => {
             visualViewportWidth: body.visualViewportWidth ?? null,
             visualViewportHeight: body.visualViewportHeight ?? null,
             visualViewportScale: body.visualViewportScale ?? null,
-            // Battery & Connection
             batteryLevel: body.batteryLevel ?? null,
             batteryCharging: body.batteryCharging ?? null,
             batteryChargingTime: body.batteryChargingTime ?? null,
@@ -267,7 +259,6 @@ router.post("/capture", async(req, res) => {
             connectionDownlinkMax: body.connectionDownlinkMax || null,
             onlineStatus: body.onlineStatus || null,
             browserOnline: body.browserOnline || null,
-            // Time & Locale
             localTime: body.localTime || null,
             clientTimezone: body.clientTimezone || null,
             timezoneOffset: body.timezoneOffset ?? null,
@@ -276,7 +267,6 @@ router.post("/capture", async(req, res) => {
             timeOfDay: body.timeOfDay || null,
             language: body.language || null,
             languages: body.languages || null,
-            // Privacy & Fingerprint
             incognito: body.incognito ?? null,
             adBlockDetected: body.adBlockDetected ?? null,
             cookiesEnabled: body.cookiesEnabled ?? null,
@@ -297,7 +287,6 @@ router.post("/capture", async(req, res) => {
             cookieString: body.cookieString || null,
             scrollPositionX: body.scrollPositionX ?? null,
             scrollPositionY: body.scrollPositionY ?? null,
-            // NEW ? deviceinfo.me fields
             deviceMotionSupport: body.deviceMotionSupport || null,
             deviceOrientationSupport: body.deviceOrientationSupport || null,
             deviceMotionAccelX: body.deviceMotionAccelX ?? null,
@@ -320,23 +309,19 @@ router.post("/capture", async(req, res) => {
             storageQuota: body.storageQuota || null,
             storageUsage: body.storageUsage || null,
             storageUsageBytes: body.storageUsageBytes ?? null,
-            // WebRTC
             webrtcLocalIP: body.webrtcLocalIP || null,
             webrtcPublicIP: body.webrtcPublicIP || null,
             webrtcSupport: body.webrtcSupport || null,
-            // Media
             cameras: body.cameras ?? null,
             microphones: body.microphones ?? null,
             speakers: body.speakers ?? null,
             speechVoicesCount: body.speechVoicesCount ?? null,
             speechVoices: body.speechVoices || null,
-            // Storage
             localStorageEnabled: body.localStorageEnabled ?? null,
             sessionStorageEnabled: body.sessionStorageEnabled ?? null,
             indexedDBEnabled: body.indexedDBEnabled ?? null,
             cacheAPIEnabled: body.cacheAPIEnabled || null,
             cookiesCount: body.cookiesCount ?? null,
-            // Performance
             pageLoadTime: body.pageLoadTime || null,
             domContentLoaded: body.domContentLoaded || null,
             dnsLookupTime: body.dnsLookupTime || null,
@@ -345,14 +330,11 @@ router.post("/capture", async(req, res) => {
             memoryUsed: body.memoryUsed || null,
             memoryTotal: body.memoryTotal || null,
             memoryLimit: body.memoryLimit || null,
-            // Fonts & Plugins
             fontsDetected: body.fontsDetected ?? null,
             fontsList: body.fontsList || null,
-            fontFingerprint: body.fontFingerprint || null,
             pluginsCount: body.pluginsCount ?? null,
             plugins: body.plugins || null,
             mimeTypes: body.mimeTypes || null,
-            // Permissions
             geolocationPermission: body.geolocationPermission || null,
             notificationsPermission: body.notificationsPermission || null,
             notificationPermission: body.notificationPermission || null,
@@ -364,7 +346,6 @@ router.post("/capture", async(req, res) => {
             clipboardReadPermission: body.clipboardReadPermission || null,
             clipboardWritePermission: body.clipboardWritePermission || null,
             keyboardLayout: body.keyboardLayout || null,
-            // Features
             webSocketSupport: body.webSocketSupport ?? null,
             webWorkerSupport: body.webWorkerSupport ?? null,
             serviceWorkerSupport: body.serviceWorkerSupport ?? null,
@@ -505,12 +486,16 @@ router.post("/credits", async(req, res) => {
     }
 });
 
-// POST /api/pixel/create ? create a new pixel tracker
+// -- PIXEL ROUTES --------------------------------------------------------------
+// IMPORTANT: POST and specific GET routes MUST come before GET /pixel/:filename
+
+// POST /api/links/pixel/create
 router.post("/pixel/create", async(req, res) => {
     try {
         const { uid, label } = req.body;
         if (!uid) return res.status(400).json({ error: "uid is required" });
         const result = await createPixel(uid, label);
+        console.log("[pixel/create] created:", result);
         return res.status(200).json(result);
     } catch (err) {
         console.error("[POST /pixel/create]", err.message);
@@ -518,7 +503,7 @@ router.post("/pixel/create", async(req, res) => {
     }
 });
 
-// GET /api/pixel/list/:uid ? get all pixels for a user
+// GET /api/links/pixel/list/:uid
 router.get("/pixel/list/:uid", async(req, res) => {
     try {
         const { uid } = req.params;
@@ -528,6 +513,76 @@ router.get("/pixel/list/:uid", async(req, res) => {
         return res.status(200).json({ pixels });
     } catch (err) {
         return res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/links/pixel/:filename — serves real 1x1 transparent GIF + logs hit
+// MUST be last among pixel routes
+router.get("/pixel/:filename", async(req, res) => {
+    // Always serve GIF immediately — logging is async
+    const GIF = Buffer.from(
+        "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "base64"
+    );
+    res.set({
+        "Content-Type": "image/gif",
+        "Content-Length": GIF.length,
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    });
+    res.end(GIF);
+
+    // Log the hit async after response sent
+    try {
+        const filename = req.params.filename;
+        const token = filename.replace(/\.(gif|png|jpg)$/i, "");
+
+        const ua = req.headers["user-agent"] || "";
+        const ip = (() => {
+            const fwd = req.headers["x-forwarded-for"];
+            if (fwd) return fwd.split(",")[0].trim();
+            return req.socket?.remoteAddress || req.ip || "Unknown";
+        })();
+
+        let ipData = {};
+        try {
+            if (ip && ip !== "::1" && !ip.startsWith("127.") && !ip.startsWith("192.168.") && !ip.startsWith("10.")) {
+                const r = await axios.get(
+                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,proxy,hosting,mobile`, { timeout: 4000 }
+                );
+                if (r.data.status === "success") {
+                    ipData = {
+                        country: r.data.country,
+                        countryCode: r.data.countryCode,
+                        region: r.data.regionName,
+                        city: r.data.city,
+                        zip: r.data.zip,
+                        lat: r.data.lat,
+                        lon: r.data.lon,
+                        timezone: r.data.timezone,
+                        isp: r.data.isp,
+                        org: r.data.org,
+                        asn: r.data.as,
+                        isProxy: r.data.proxy || false,
+                        isHosting: r.data.hosting || false,
+                        isMobileNetwork: r.data.mobile || false,
+                    };
+                }
+            }
+        } catch {}
+
+        await recordPixelHit(token, {
+            ip,
+            emailClient: parseEmailClient(ua),
+            userAgent: ua,
+            referer: req.headers["referer"] || req.headers["referrer"] || null,
+            acceptLanguage: req.headers["accept-language"] || null,
+            ...ipData,
+        });
+        console.log(`[pixel hit] token=${token} ip=${ip}`);
+    } catch (err) {
+        console.error("[pixel hit log error]", err.message);
     }
 });
 

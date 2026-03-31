@@ -71,55 +71,13 @@ export async function addCredits(uid, amount) {
     });
 }
 
-// ── PIXEL TRACKING ────────────────────────────────────────────────────────────
+// -- PIXEL TRACKING ------------------------------------------------------------
 
 export async function createPixel(uid, label) {
     const token = generateToken();
-    const pixelUrl = `${BACKEND_URL}/api/pixel/${token}.gif`;
-
-    await db.collection("pixelLinks").add({
-        uid,
-        token,
-        label: label || "Pixel Tracker",
-        pixelUrl,
-        totalOpens: 0,
-        uniqueIPs: [],
-        hits: [],
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return { token, pixelUrl };
-}
-
-export async function recordPixelHit(token, hitData) {
-    const ref = db.collection("pixelLinks");
-    const snap = await ref.where("token", "==", token).get();
-    if (snap.empty) return false;
-
-    const docRef = ref.doc(snap.docs[0].id);
-    const existing = snap.docs[0].data();
-    const uniqueIPs = existing.uniqueIPs || [];
-    const isRepeatOpen = uniqueIPs.includes(hitData.ip);
-    const isForwarded = !isRepeatOpen && uniqueIPs.length > 0;
-
-    await docRef.update({
-        totalOpens: admin.firestore.FieldValue.increment(1),
-        uniqueIPs: isRepeatOpen ? uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),
-        hits: admin.firestore.FieldValue.arrayUnion({
-            ...hitData,
-            isRepeatOpen,
-            isForwarded,
-            openedAt: new Date().toISOString(),
-        }),
-    });
-    return true;
-}
-
-
-
-export async function createPixel(uid, label) {
-    const token = generateToken();
+    // Correct path: /api/links/pixel/TOKEN.gif
     const pixelUrl = `${BACKEND_URL}/api/links/pixel/${token}.gif`;
+
     await db.collection("pixelLinks").add({
         uid,
         token,
@@ -130,6 +88,7 @@ export async function createPixel(uid, label) {
         hits: [],
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
     return { token, pixelUrl };
 }
 
@@ -137,14 +96,18 @@ export async function recordPixelHit(token, hitData) {
     const ref = db.collection("pixelLinks");
     const snap = await ref.where("token", "==", token).get();
     if (snap.empty) return false;
+
     const docRef = ref.doc(snap.docs[0].id);
     const existing = snap.docs[0].data();
     const uniqueIPs = existing.uniqueIPs || [];
     const isRepeatOpen = uniqueIPs.includes(hitData.ip);
     const isForwarded = !isRepeatOpen && uniqueIPs.length > 0;
+
     await docRef.update({
         totalOpens: admin.firestore.FieldValue.increment(1),
-        uniqueIPs: isRepeatOpen ? uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),
+        uniqueIPs: isRepeatOpen ?
+            uniqueIPs :
+            admin.firestore.FieldValue.arrayUnion(hitData.ip),
         hits: admin.firestore.FieldValue.arrayUnion({
             ...hitData,
             isRepeatOpen,
