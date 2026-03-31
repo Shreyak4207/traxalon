@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
@@ -102,400 +102,29 @@ async function enrichIP(ip) {
     } catch { return {}; }
 }
 
-// -- HEALTH --------------------------------------------------------------------
-router.get("/health", (_req, res) => res.status(200).json({ ok: true }));
+// ── PIXEL ROUTES ──────────────────────────────────────────────────────────────
 
-// -- TRACKING LINK -------------------------------------------------------------
-router.post("/shorten", async(req, res) => {
-    try {
-        const { uid, label, destinationUrl } = req.body;
-        if (!uid) return res.status(400).json({ error: "uid is required" });
-        if (!destinationUrl) return res.status(400).json({ error: "destinationUrl is required" });
-        const result = await createTrackingLink(uid, label, destinationUrl);
-        return res.status(200).json(result);
-    } catch (err) {
-        console.error("[POST /shorten]", err.message);
-        return res.status(400).json({ error: err.message });
-    }
-});
+function parseEmailClient(ua) {
+    ua = ua || "";
+    if (/Googlebot|Google-Apps-Script|Gmail/i.test(ua)) return "Gmail";
+    if (/Outlook|microsoft\.outlook/i.test(ua)) return "Outlook";
+    if (/YahooMailProxy|Yahoo/i.test(ua)) return "Yahoo Mail";
+    if (/Apple.*Mail|Thunderbird/i.test(ua)) return "Apple Mail";
+    if (/ProtonMail/i.test(ua)) return "ProtonMail";
+    if (/Chrome/i.test(ua)) return "Chrome Browser";
+    if (/Firefox/i.test(ua)) return "Firefox Browser";
+    if (/Safari/i.test(ua)) return "Safari Browser";
+    return "Unknown";
+}
 
-router.post("/capture", async(req, res) => {
-    try {
-        const body = req.body;
-        const { token } = body;
-        if (!token) return res.status(400).json({ error: "token is required" });
-        const ua = req.headers["user-agent"] || "";
-        const BOT_PATTERNS = /bot|crawl|spider|preview|slurp|facebookexternalhit|whatsapp|telegram|slack|discord|curl|wget|python|java|go-http|axios|node-fetch|undici/i;
-        if (BOT_PATTERNS.test(ua)) return res.status(200).json({ found: true, destinationUrl: null });
-        if (!body.screenWidth && !body.gpsLat && (!ua || ua.length < 40)) return res.status(200).json({ found: true, destinationUrl: null });
+// IMPORTANT: /pixel/create and /pixel/list must come BEFORE /pixel/:filename
+// Otherwise Express matches "create" as a filename token
 
-        const ip = getClientIP(req);
-        const ipData = await enrichIP(ip);
-        let geoData = {};
-        if (body.gpsLat && body.gpsLon) geoData = await reverseGeocode(body.gpsLat, body.gpsLon);
-
-        const deviceData = {
-            ip,
-            country: ipData.country || null,
-            countryCode: ipData.countryCode || null,
-            region: ipData.region || null,
-            city: ipData.city || null,
-            zip: ipData.zip || null,
-            lat: ipData.lat || null,
-            lon: ipData.lon || null,
-            timezone: ipData.timezone || null,
-            isp: ipData.isp || null,
-            org: ipData.org || null,
-            asn: ipData.asn || null,
-            hostname: ipData.hostname || null,
-            isProxy: ipData.isProxy || null,
-            isHosting: ipData.isHosting || null,
-            isMobileNetwork: ipData.isMobileNetwork || null,
-            gpsLat: body.gpsLat || null,
-            gpsLon: body.gpsLon || null,
-            gpsAccuracy: body.gpsAccuracy || null,
-            gpsAltitude: body.gpsAltitude || null,
-            gpsSpeed: body.gpsSpeed || null,
-            gpsHeading: body.gpsHeading || null,
-            gpsAddress: geoData.gpsAddress || null,
-            gpsCity: geoData.gpsCity || null,
-            gpsState: geoData.gpsState || null,
-            gpsPincode: geoData.gpsPincode || null,
-            gpsCountry: geoData.gpsCountry || null,
-            browser: parseBrowser(ua),
-            os: parseOS(ua),
-            device: parseDevice(ua),
-            userAgent: ua,
-            browserVersion: body.browserVersion || null,
-            browserCodeName: body.browserCodeName || null,
-            appName: body.appName || null,
-            appVersion: body.appVersion || null,
-            product: body.product || null,
-            buildID: body.buildID || null,
-            vendor: body.vendor || null,
-            platform: body.platform || null,
-            architecture: body.architecture || null,
-            oscpu: body.oscpu || null,
-            cpuClass: body.cpuClass || null,
-            deviceBrand: body.deviceBrand || null,
-            deviceModel: body.deviceModel || null,
-            webdriver: body.webdriver || null,
-            automationDetected: body.automationDetected || null,
-            cpuCores: body.cpuCores || null,
-            ram: body.ram || null,
-            memoryTier: body.memoryTier || null,
-            maxTouchPoints: body.maxTouchPoints || null,
-            maxTouchPointsDetail: body.maxTouchPointsDetail || null,
-            touchSupport: body.touchSupport ?? null,
-            isTouchDevice: body.isTouchDevice || null,
-            pointerType: body.pointerType || null,
-            pointerFine: body.pointerFine || null,
-            hoverCapability: body.hoverCapability || null,
-            javaEnabled: body.javaEnabled ?? null,
-            pdfViewerEnabled: body.pdfViewerEnabled ?? null,
-            gamepadsConnected: body.gamepadsConnected || null,
-            gpu: body.gpu || null,
-            gpuVendor: body.gpuVendor || null,
-            webglVersion: body.webglVersion || null,
-            webglRenderer: body.webglRenderer || null,
-            webglVendor: body.webglVendor || null,
-            webglShadingLanguage: body.webglShadingLanguage || null,
-            webglHash: body.webglHash || null,
-            shaderPrecision: body.shaderPrecision || null,
-            maxTextureSize: body.maxTextureSize || null,
-            maxViewportDims: body.maxViewportDims || null,
-            maxAnisotropy: body.maxAnisotropy || null,
-            maxVertexAttribs: body.maxVertexAttribs || null,
-            maxVertexUniformVectors: body.maxVertexUniformVectors || null,
-            maxFragmentUniformVectors: body.maxFragmentUniformVectors || null,
-            maxCombinedTextureUnits: body.maxCombinedTextureUnits || null,
-            maxCubeMapTextureSize: body.maxCubeMapTextureSize || null,
-            maxRenderBufferSize: body.maxRenderBufferSize || null,
-            maxVaryingVectors: body.maxVaryingVectors || null,
-            maxVertexTextureUnits: body.maxVertexTextureUnits || null,
-            maxFragmentTextureUnits: body.maxFragmentTextureUnits || null,
-            aliasedPointSizeRange: body.aliasedPointSizeRange || null,
-            aliasedLineWidthRange: body.aliasedLineWidthRange || null,
-            webglExtensionsCount: body.webglExtensionsCount || null,
-            webglExtensionsList: body.webglExtensionsList || null,
-            webgl2Support: body.webgl2Support ?? null,
-            screenWidth: body.screenWidth || null,
-            screenHeight: body.screenHeight || null,
-            screenAvailWidth: body.screenAvailWidth || null,
-            screenAvailHeight: body.screenAvailHeight || null,
-            colorDepth: body.colorDepth || null,
-            pixelDepth: body.pixelDepth || null,
-            screenColorDepth: body.screenColorDepth || null,
-            pixelRatio: body.pixelRatio || null,
-            devicePixelRatioPercent: body.devicePixelRatioPercent || null,
-            windowWidth: body.windowWidth || null,
-            windowHeight: body.windowHeight || null,
-            outerWidth: body.outerWidth || null,
-            outerHeight: body.outerHeight || null,
-            orientation: body.orientation || null,
-            orientationAngle: body.orientationAngle ?? null,
-            hdrSupport: body.hdrSupport || null,
-            colorGamut: body.colorGamut || null,
-            forcedColors: body.forcedColors || null,
-            invertedColors: body.invertedColors || null,
-            prefersColorScheme: body.prefersColorScheme || null,
-            prefersReducedMotion: body.prefersReducedMotion || null,
-            prefersContrast: body.prefersContrast || null,
-            displayMode: body.displayMode || null,
-            cssPxDensity: body.cssPxDensity || null,
-            monochrome: body.monochrome || null,
-            visualViewportWidth: body.visualViewportWidth ?? null,
-            visualViewportHeight: body.visualViewportHeight ?? null,
-            visualViewportScale: body.visualViewportScale ?? null,
-            batteryLevel: body.batteryLevel ?? null,
-            batteryCharging: body.batteryCharging ?? null,
-            batteryChargingTime: body.batteryChargingTime ?? null,
-            batteryDischargingTime: body.batteryDischargingTime ?? null,
-            connectionType: body.connectionType || null,
-            connectionQuality: body.connectionQuality || null,
-            connectionDownlink: body.connectionDownlink || null,
-            connectionRtt: body.connectionRtt || null,
-            connectionSaveData: body.connectionSaveData ?? null,
-            connectionDownlinkMax: body.connectionDownlinkMax || null,
-            onlineStatus: body.onlineStatus || null,
-            browserOnline: body.browserOnline || null,
-            localTime: body.localTime || null,
-            clientTimezone: body.clientTimezone || null,
-            timezoneOffset: body.timezoneOffset ?? null,
-            dstActive: body.dstActive || null,
-            dayOfWeek: body.dayOfWeek || null,
-            timeOfDay: body.timeOfDay || null,
-            language: body.language || null,
-            languages: body.languages || null,
-            incognito: body.incognito ?? null,
-            adBlockDetected: body.adBlockDetected ?? null,
-            cookiesEnabled: body.cookiesEnabled ?? null,
-            doNotTrack: body.doNotTrack || null,
-            historyLength: body.historyLength || null,
-            navigationCount: body.navigationCount || null,
-            referrer: body.referrer || null,
-            canvasHash: body.canvasHash || null,
-            canvasGeometryHash: body.canvasGeometryHash || null,
-            audioFingerprint: body.audioFingerprint || null,
-            cssHash: body.cssHash || null,
-            fontFingerprint: body.fontFingerprint || null,
-            tabHidden: body.tabHidden || null,
-            visibilityState: body.visibilityState || null,
-            documentCharset: body.documentCharset || null,
-            documentCompatMode: body.documentCompatMode || null,
-            windowName: body.windowName || null,
-            cookieString: body.cookieString || null,
-            scrollPositionX: body.scrollPositionX ?? null,
-            scrollPositionY: body.scrollPositionY ?? null,
-            deviceMotionSupport: body.deviceMotionSupport || null,
-            deviceOrientationSupport: body.deviceOrientationSupport || null,
-            deviceMotionAccelX: body.deviceMotionAccelX ?? null,
-            deviceMotionAccelY: body.deviceMotionAccelY ?? null,
-            deviceMotionAccelZ: body.deviceMotionAccelZ ?? null,
-            deviceOrientationAlpha: body.deviceOrientationAlpha ?? null,
-            deviceOrientationBeta: body.deviceOrientationBeta ?? null,
-            deviceOrientationGamma: body.deviceOrientationGamma ?? null,
-            mouseX: body.mouseX ?? null,
-            mouseY: body.mouseY ?? null,
-            popupBlocked: body.popupBlocked || null,
-            contentFilteringDetected: body.contentFilteringDetected || null,
-            tlsVersion: body.tlsVersion || null,
-            pageVisibilityChanges: body.pageVisibilityChanges ?? null,
-            keysPressed: body.keysPressed || null,
-            activeXSupport: body.activeXSupport || null,
-            firefoxExtensions: body.firefoxExtensions || null,
-            fingerprintingResistance: body.fingerprintingResistance || null,
-            trackingProtection: body.trackingProtection || null,
-            storageQuota: body.storageQuota || null,
-            storageUsage: body.storageUsage || null,
-            storageUsageBytes: body.storageUsageBytes ?? null,
-            webrtcLocalIP: body.webrtcLocalIP || null,
-            webrtcPublicIP: body.webrtcPublicIP || null,
-            webrtcSupport: body.webrtcSupport || null,
-            cameras: body.cameras ?? null,
-            microphones: body.microphones ?? null,
-            speakers: body.speakers ?? null,
-            speechVoicesCount: body.speechVoicesCount ?? null,
-            speechVoices: body.speechVoices || null,
-            localStorageEnabled: body.localStorageEnabled ?? null,
-            sessionStorageEnabled: body.sessionStorageEnabled ?? null,
-            indexedDBEnabled: body.indexedDBEnabled ?? null,
-            cacheAPIEnabled: body.cacheAPIEnabled || null,
-            cookiesCount: body.cookiesCount ?? null,
-            pageLoadTime: body.pageLoadTime || null,
-            domContentLoaded: body.domContentLoaded || null,
-            dnsLookupTime: body.dnsLookupTime || null,
-            tcpConnectTime: body.tcpConnectTime || null,
-            ttfb: body.ttfb || null,
-            memoryUsed: body.memoryUsed || null,
-            memoryTotal: body.memoryTotal || null,
-            memoryLimit: body.memoryLimit || null,
-            fontsDetected: body.fontsDetected ?? null,
-            fontsList: body.fontsList || null,
-            pluginsCount: body.pluginsCount ?? null,
-            plugins: body.plugins || null,
-            mimeTypes: body.mimeTypes || null,
-            geolocationPermission: body.geolocationPermission || null,
-            notificationsPermission: body.notificationsPermission || null,
-            notificationPermission: body.notificationPermission || null,
-            cameraPermission: body.cameraPermission || null,
-            microphonePermission: body.microphonePermission || null,
-            accelerometerPermission: body.accelerometerPermission || null,
-            gyroscopePermission: body.gyroscopePermission || null,
-            magnetometerPermission: body.magnetometerPermission || null,
-            clipboardReadPermission: body.clipboardReadPermission || null,
-            clipboardWritePermission: body.clipboardWritePermission || null,
-            keyboardLayout: body.keyboardLayout || null,
-            webSocketSupport: body.webSocketSupport ?? null,
-            webWorkerSupport: body.webWorkerSupport ?? null,
-            serviceWorkerSupport: body.serviceWorkerSupport ?? null,
-            webAssemblySupport: body.webAssemblySupport ?? null,
-            bluetoothSupport: body.bluetoothSupport ?? null,
-            usbSupport: body.usbSupport ?? null,
-            nfcSupport: body.nfcSupport || null,
-            serialSupport: body.serialSupport || null,
-            hidSupport: body.hidSupport || null,
-            wakeLockSupport: body.wakeLockSupport || null,
-            vibrationSupport: body.vibrationSupport || null,
-            notificationSupport: body.notificationSupport || null,
-            gamepadSupport: body.gamepadSupport || null,
-            xrSupport: body.xrSupport || null,
-            offscreenCanvasSupport: body.offscreenCanvasSupport || null,
-            sharedArrayBufferSupport: body.sharedArrayBufferSupport || null,
-            broadcastChannelSupport: body.broadcastChannelSupport || null,
-            paymentRequestSupport: body.paymentRequestSupport || null,
-            credentialMgmtSupport: body.credentialMgmtSupport || null,
-            presentationSupport: body.presentationSupport || null,
-            eyeDropperSupport: body.eyeDropperSupport || null,
-            fileSystemAccessSupport: body.fileSystemAccessSupport || null,
-            contactPickerSupport: body.contactPickerSupport || null,
-            webShareSupport: body.webShareSupport || null,
-            clipboardAPISupport: body.clipboardAPISupport || null,
-            mediaSessionSupport: body.mediaSessionSupport || null,
-            pictureInPictureSupport: body.pictureInPictureSupport || null,
-            pointerLockSupport: body.pointerLockSupport || null,
-            fullscreenSupport: body.fullscreenSupport || null,
-            speechRecognitionSupport: body.speechRecognitionSupport || null,
-            speechSynthesisSupport: body.speechSynthesisSupport || null,
-            cryptoSupport: body.cryptoSupport || null,
-            performanceObserverSupport: body.performanceObserverSupport || null,
-            intersectionObserverSupport: body.intersectionObserverSupport || null,
-            resizeObserverSupport: body.resizeObserverSupport || null,
-            mutationObserverSupport: body.mutationObserverSupport || null,
-            requestIdleCallbackSupport: body.requestIdleCallbackSupport || null,
-            requestAnimFrameSupport: body.requestAnimFrameSupport || null,
-            fetchSupport: body.fetchSupport || null,
-            abortControllerSupport: body.abortControllerSupport || null,
-            structuredCloneSupport: body.structuredCloneSupport || null,
-            compressionStreamSupport: body.compressionStreamSupport || null,
-            queueMicrotaskSupport: body.queueMicrotaskSupport || null,
-            indexedDBSupport: body.indexedDBSupport || null,
-        };
-
-        const result = await recordCapture(token, deviceData);
-        return res.status(200).json(result);
-    } catch (err) {
-        console.error("[POST /capture]", err.message);
-        return res.status(500).json({ error: "Failed to record capture" });
-    }
-});
-
-router.post("/capture-gps", async(req, res) => {
-    try {
-        const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
-        if (!token || !gpsLat || !gpsLon) return res.status(400).json({ error: "missing data" });
-        const geoData = await reverseGeocode(gpsLat, gpsLon);
-        const linksRef = db.collection("trackingLinks");
-        const snap = await linksRef.where("token", "==", token).get();
-        if (snap.empty) return res.status(404).json({ error: "not found" });
-        const linkDoc = snap.docs[0];
-        const captures = [...(linkDoc.data().captures || [])];
-        if (captures.length > 0) {
-            const last = {...captures[captures.length - 1] };
-            last.gpsLat = gpsLat;
-            last.gpsLon = gpsLon;
-            last.gpsAccuracy = gpsAccuracy || null;
-            last.gpsAltitude = gpsAltitude || null;
-            last.gpsSpeed = gpsSpeed || null;
-            last.gpsHeading = gpsHeading || null;
-            last.gpsAddress = geoData.gpsAddress || null;
-            last.gpsCity = geoData.gpsCity || null;
-            last.gpsState = geoData.gpsState || null;
-            last.gpsPincode = geoData.gpsPincode || null;
-            last.gpsCountry = geoData.gpsCountry || null;
-            captures[captures.length - 1] = last;
-            await linksRef.doc(linkDoc.id).update({ captures });
-        }
-        return res.status(200).json({ ok: true });
-    } catch (err) {
-        console.error("[capture-gps]", err.message);
-        return res.status(500).json({ error: err.message });
-    }
-});
-
-router.post("/shorten-url", async(req, res) => {
-    try {
-        const { url, provider } = req.body;
-        if (!url) return res.status(400).json({ error: "url required" });
-        console.log(`[shorten-url] provider=${provider}`);
-        let shortUrl = null;
-
-        if (provider === "tinyurl") {
-            const r = await axios.get("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 });
-            const result = String(r.data || "").trim();
-            if (result.startsWith("http")) shortUrl = result;
-        } else if (provider === "isgd") {
-            const r = await axios.get("https://is.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } });
-            const result = String(r.data || "").trim();
-            if (result.startsWith("http")) shortUrl = result;
-        } else if (provider === "vgd") {
-            const r = await axios.get("https://v.gd/create.php?format=simple&url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } });
-            const result = String(r.data || "").trim();
-            if (result.startsWith("http")) shortUrl = result;
-        } else if (provider === "dagd") {
-            const r = await axios.get("https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } });
-            const result = String(r.data || "").trim();
-            if (result.startsWith("http")) shortUrl = result;
-        } else if (provider === "linkshrink") {
-            const r = await axios.post("https://linkshrink.dev/api/v1/shorten", { url }, { timeout: 10000, headers: { "Content-Type": "application/json" } });
-            if (r.data?.data?.shortUrl) shortUrl = r.data.data.shortUrl;
-        }
-
-        console.log(`[shorten-url] final=${shortUrl}`);
-        return res.status(200).json({ shortUrl });
-    } catch (err) {
-        console.error("[shorten-url] ERROR:", err.message);
-        return res.status(200).json({ shortUrl: null, error: err.message });
-    }
-});
-
-router.get("/geo-ip", async(req, res) => {
-    const ip = getClientIP(req);
-    const data = await enrichIP(ip);
-    return res.status(200).json(data);
-});
-
-router.post("/credits", async(req, res) => {
-    try {
-        const { uid, amount } = req.body;
-        if (!uid || !amount) return res.status(400).json({ error: "uid and amount required" });
-        await addCredits(uid, Number(amount));
-        return res.status(200).json({ success: true });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
-});
-
-// -- PIXEL ROUTES --------------------------------------------------------------
-// IMPORTANT: POST and specific GET routes MUST come before GET /pixel/:filename
-
-// POST /api/links/pixel/create
-router.post("/pixel/create", async(req, res) => {
+router.post("/pixel/create", async (req, res) => {
     try {
         const { uid, label } = req.body;
         if (!uid) return res.status(400).json({ error: "uid is required" });
         const result = await createPixel(uid, label);
-        console.log("[pixel/create] created:", result);
         return res.status(200).json(result);
     } catch (err) {
         console.error("[POST /pixel/create]", err.message);
@@ -503,8 +132,7 @@ router.post("/pixel/create", async(req, res) => {
     }
 });
 
-// GET /api/links/pixel/list/:uid
-router.get("/pixel/list/:uid", async(req, res) => {
+router.get("/pixel/list/:uid", async (req, res) => {
     try {
         const { uid } = req.params;
         const snap = await db.collection("pixelLinks").where("uid", "==", uid).get();
@@ -516,28 +144,19 @@ router.get("/pixel/list/:uid", async(req, res) => {
     }
 });
 
-// GET /api/links/pixel/:filename � serves real 1x1 transparent GIF + logs hit
-// MUST be last among pixel routes
-router.get("/pixel/:filename", async(req, res) => {
-    // Always serve GIF immediately � logging is async
-    const GIF = Buffer.from(
-        "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-        "base64"
-    );
+router.get("/pixel/:filename", async (req, res) => {
+    const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
     res.set({
         "Content-Type": "image/gif",
         "Content-Length": GIF.length,
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
         "Pragma": "no-cache",
         "Expires": "0",
     });
     res.end(GIF);
 
-    // Log the hit async after response sent
     try {
-        const filename = req.params.filename;
-        const token = filename.replace(/\.(gif|png|jpg)$/i, "");
-
+        const token = req.params.filename.replace(/\.(gif|png|jpg)$/i, "");
         const ua = req.headers["user-agent"] || "";
         const ip = (() => {
             const fwd = req.headers["x-forwarded-for"];
@@ -547,45 +166,47 @@ router.get("/pixel/:filename", async(req, res) => {
 
         let ipData = {};
         try {
-            if (ip && ip !== "::1" && !ip.startsWith("127.") && !ip.startsWith("192.168.") && !ip.startsWith("10.")) {
+            if (ip && ip !== "::1" && !ip.startsWith("127.") && !ip.startsWith("192.168.")) {
                 const r = await axios.get(
-                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,proxy,hosting,mobile`, { timeout: 4000 }
+                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,proxy,hosting,mobile`,
+                    { timeout: 4000 }
                 );
                 if (r.data.status === "success") {
                     ipData = {
-                        country: r.data.country,
-                        countryCode: r.data.countryCode,
-                        region: r.data.regionName,
-                        city: r.data.city,
-                        zip: r.data.zip,
-                        lat: r.data.lat,
-                        lon: r.data.lon,
-                        timezone: r.data.timezone,
-                        isp: r.data.isp,
-                        org: r.data.org,
-                        asn: r.data.as,
+                        country: r.data.country || null,
+                        countryCode: r.data.countryCode || null,
+                        region: r.data.regionName || null,
+                        city: r.data.city || null,
+                        zip: r.data.zip || null,
+                        lat: r.data.lat || null,
+                        lon: r.data.lon || null,
+                        timezone: r.data.timezone || null,
+                        isp: r.data.isp || null,
+                        org: r.data.org || null,
                         isProxy: r.data.proxy || false,
                         isHosting: r.data.hosting || false,
                         isMobileNetwork: r.data.mobile || false,
                     };
                 }
             }
-        } catch {}
+        } catch { }
 
-        await recordPixelHit(token, {
+        const hitData = {
             ip,
             emailClient: parseEmailClient(ua),
             userAgent: ua,
             referer: req.headers["referer"] || req.headers["referrer"] || null,
             acceptLanguage: req.headers["accept-language"] || null,
+            os: parseOS(ua),
+            device: parseDevice(ua),
+            browser: parseBrowser(ua),
             ...ipData,
-        });
-        console.log(`[pixel hit] token=${token} ip=${ip}`);
+        };
+
+        recordPixelHit(token, hitData).catch(() => {});
     } catch (err) {
-        console.error("[pixel hit log error]", err.message);
+        console.error("[GET /pixel]", err.message);
     }
 });
 
 export default router;
-
-
