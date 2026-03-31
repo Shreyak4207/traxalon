@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
@@ -102,25 +102,12 @@ async function enrichIP(ip) {
     } catch { return {}; }
 }
 
-// ── PIXEL ROUTES ──────────────────────────────────────────────────────────────
-
-function parseEmailClient(ua) {
-    ua = ua || "";
-    if (/Googlebot|Google-Apps-Script|Gmail/i.test(ua)) return "Gmail";
-    if (/Outlook|microsoft\.outlook/i.test(ua)) return "Outlook";
-    if (/YahooMailProxy|Yahoo/i.test(ua)) return "Yahoo Mail";
-    if (/Apple.*Mail|Thunderbird/i.test(ua)) return "Apple Mail";
-    if (/ProtonMail/i.test(ua)) return "ProtonMail";
-    if (/Chrome/i.test(ua)) return "Chrome Browser";
-    if (/Firefox/i.test(ua)) return "Firefox Browser";
-    if (/Safari/i.test(ua)) return "Safari Browser";
-    return "Unknown";
-}
+// -- PIXEL ROUTES --------------------------------------------------------------
 
 // IMPORTANT: /pixel/create and /pixel/list must come BEFORE /pixel/:filename
 // Otherwise Express matches "create" as a filename token
 
-router.post("/pixel/create", async (req, res) => {
+router.post("/pixel/create", async(req, res) => {
     try {
         const { uid, label } = req.body;
         if (!uid) return res.status(400).json({ error: "uid is required" });
@@ -132,7 +119,7 @@ router.post("/pixel/create", async (req, res) => {
     }
 });
 
-router.get("/pixel/list/:uid", async (req, res) => {
+router.get("/pixel/list/:uid", async(req, res) => {
     try {
         const { uid } = req.params;
         const snap = await db.collection("pixelLinks").where("uid", "==", uid).get();
@@ -144,7 +131,7 @@ router.get("/pixel/list/:uid", async (req, res) => {
     }
 });
 
-router.get("/pixel/:filename", async (req, res) => {
+router.get("/pixel/:filename", async(req, res) => {
     const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
     res.set({
         "Content-Type": "image/gif",
@@ -168,8 +155,7 @@ router.get("/pixel/:filename", async (req, res) => {
         try {
             if (ip && ip !== "::1" && !ip.startsWith("127.") && !ip.startsWith("192.168.")) {
                 const r = await axios.get(
-                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,proxy,hosting,mobile`,
-                    { timeout: 4000 }
+                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,proxy,hosting,mobile`, { timeout: 4000 }
                 );
                 if (r.data.status === "success") {
                     ipData = {
@@ -189,7 +175,7 @@ router.get("/pixel/:filename", async (req, res) => {
                     };
                 }
             }
-        } catch { }
+        } catch {}
 
         const hitData = {
             ip,
@@ -210,3 +196,5 @@ router.get("/pixel/:filename", async (req, res) => {
 });
 
 export default router;
+
+
