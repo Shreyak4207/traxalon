@@ -13,6 +13,7 @@ import TrackingCapture from "./pages/TrackingCapture";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ResetPassword from "./pages/ResetPassword";
 import PixelTracker from "./pages/PixelTracker";
+import EmailSender from "./pages/EmailSender";
 
 function WithNavbar({ children }) {
   return (
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/contact" element={<WithNavbar><Contact /></WithNavbar>} />
           <Route path="/terms" element={<WithNavbar><TermsAndConditions /></WithNavbar>} />
           <Route path="/reset-password" element={<WithNavbar><ResetPassword /></WithNavbar>} />
+          <Route path="/email-sender" element={<WithNavbar><ProtectedRoute><EmailSender /></ProtectedRoute></WithNavbar>} />
           <Route path="/pixels" element={<WithNavbar><ProtectedRoute><PixelTracker /></ProtectedRoute></WithNavbar>} />
           <Route path="/dashboard" element={<WithNavbar><ProtectedRoute><Dashboard /></ProtectedRoute></WithNavbar>} />
         </Routes>
@@ -43,3 +45,5 @@ export default function App() {
     </Router>
   );
 }
+
+

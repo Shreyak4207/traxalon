@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Shield, Menu, X, LogOut, Zap } from "lucide-react";
@@ -53,7 +53,7 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {/* Pixel Tracker — only when logged in */}
+            {/* Pixel Tracker â€” only when logged in */}
             {isAuthenticated && (
               <Link
                 to="/pixels"
@@ -64,6 +64,16 @@ export default function Navbar() {
                 }`}
               >
                 Pixel Tracker
+              </Link>
+              <Link
+                to="/email-sender"
+                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                  location.pathname === "/email-sender"
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Email Sender
               </Link>
             )}
           </div>
@@ -152,6 +162,16 @@ export default function Navbar() {
                 }`}
               >
                 Pixel Tracker
+              </Link>
+              <Link
+                to="/email-sender"
+                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                  location.pathname === "/email-sender"
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Email Sender
               </Link>
               <button
                 onClick={handleLogout}

