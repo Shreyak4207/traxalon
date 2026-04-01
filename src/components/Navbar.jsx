@@ -55,27 +55,30 @@ export default function Navbar() {
             ))}
             {/* Pixel Tracker â€” only when logged in */}
             {isAuthenticated && (
-              <Link
-                to="/pixels"
-                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
-                  location.pathname === "/pixels"
-                    ? "text-primary"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                Pixel Tracker
-              </Link>
-              <Link
-                to="/email-sender"
-                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
-                  location.pathname === "/email-sender"
-                    ? "text-primary"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                Email Sender
-              </Link>
-            )}
+  <>
+    <Link
+      to="/pixels"
+      className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+        location.pathname === "/pixels"
+          ? "text-primary"
+          : "text-text-secondary hover:text-text-primary"
+      }`}
+    >
+      Pixel Tracker
+    </Link>
+
+    <Link
+      to="/email-sender"
+      className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+        location.pathname === "/email-sender"
+          ? "text-primary"
+          : "text-text-secondary hover:text-text-primary"
+      }`}
+    >
+      Email Sender
+    </Link>
+  </>
+)}
           </div>
 
           {/* Desktop auth section */}
@@ -173,6 +176,16 @@ export default function Navbar() {
               >
                 Email Sender
               </Link>
+              <Link
+                to="/email-sender"
+                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                  location.pathname === "/email-sender"
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Email Sender
+              </Link>
               <button
                 onClick={handleLogout}
                 className="block text-sm text-accent py-2"
@@ -191,3 +204,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
