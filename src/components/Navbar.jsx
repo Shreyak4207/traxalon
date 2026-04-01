@@ -53,32 +53,33 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {/* Pixel Tracker â€” only when logged in */}
-            {isAuthenticated && (
-  <>
-    <Link
-      to="/pixels"
-      className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
-        location.pathname === "/pixels"
-          ? "text-primary"
-          : "text-text-secondary hover:text-text-primary"
-      }`}
-    >
-      Pixel Tracker
-    </Link>
 
-    <Link
-      to="/email-sender"
-      className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
-        location.pathname === "/email-sender"
-          ? "text-primary"
-          : "text-text-secondary hover:text-text-primary"
-      }`}
-    >
-      Email Sender
-    </Link>
-  </>
-)}
+            {/* Pixel Tracker — only when logged in */}
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/pixels"
+                  className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                    location.pathname === "/pixels"
+                      ? "text-primary"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  Pixel Tracker
+                </Link>
+
+                <Link
+                  to="/email-sender"
+                  className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
+                    location.pathname === "/email-sender"
+                      ? "text-primary"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  Email Sender
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop auth section */}
@@ -99,6 +100,7 @@ export default function Navbar() {
                     )}
                   </div>
                 </Link>
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 text-text-secondary hover:text-accent transition-colors text-sm"
@@ -148,6 +150,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+
           {isAuthenticated && userProfile ? (
             <>
               <Link
@@ -157,17 +160,23 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+
               <Link
                 to="/pixels"
                 onClick={() => setMobileOpen(false)}
                 className={`block text-sm py-2 ${
-                  location.pathname === "/pixels" ? "text-primary font-semibold" : "text-text-secondary hover:text-primary"
+                  location.pathname === "/pixels"
+                    ? "text-primary font-semibold"
+                    : "text-text-secondary hover:text-primary"
                 }`}
               >
                 Pixel Tracker
               </Link>
+
+              {/* ✅ FIXED: removed duplicate */}
               <Link
                 to="/email-sender"
+                onClick={() => setMobileOpen(false)}
                 className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
                   location.pathname === "/email-sender"
                     ? "text-primary"
@@ -176,16 +185,7 @@ export default function Navbar() {
               >
                 Email Sender
               </Link>
-              <Link
-                to="/email-sender"
-                className={`font-body text-sm tracking-wider uppercase transition-colors duration-200 ${
-                  location.pathname === "/email-sender"
-                    ? "text-primary"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                Email Sender
-              </Link>
+
               <button
                 onClick={handleLogout}
                 className="block text-sm text-accent py-2"
@@ -195,8 +195,21 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm text-text-secondary py-2">Login</Link>
-              <Link to="/signup" onClick={() => setMobileOpen(false)} className="block text-sm text-primary py-2">Sign Up</Link>
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block text-sm text-text-secondary py-2"
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/signup"
+                onClick={() => setMobileOpen(false)}
+                className="block text-sm text-primary py-2"
+              >
+                Sign Up
+              </Link>
             </>
           )}
         </div>
@@ -204,4 +217,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
