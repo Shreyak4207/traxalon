@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import axios from "axios";
 import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
@@ -240,6 +240,38 @@ router.get("/pixel/:filename", async(req, res) => {
     }
 });
 
+// ── EMAIL SENDER ──────────────────────────────────────────────────────────────
+import nodemailer from "nodemailer";
+
+router.post("/send-email", async (req, res) => {
+    try {
+        const { fromName, fromEmail, toEmail, subject, htmlBody } = req.body;
+        if (!toEmail || !subject || !htmlBody) {
+            return res.status(400).json({ error: "toEmail, subject and htmlBody are required" });
+        }
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+        const mailOptions = {
+            from: `"${fromName || "Security Team"}" <${process.env.SMTP_USER}>`,
+            replyTo: fromEmail || process.env.SMTP_USER,
+            to: toEmail,
+            subject: subject,
+            html: htmlBody,
+        };
+        const info = await transporter.sendMail(mailOptions);
+        return res.status(200).json({ success: true, messageId: info.messageId });
+    } catch (err) {
+        console.error("[send-email]", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
+
 
 
