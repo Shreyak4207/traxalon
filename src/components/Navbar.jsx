@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Shield, Menu, X, LogOut, Zap } from "lucide-react";
@@ -63,7 +63,7 @@ export default function Navbar() {
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
-                Pixel Tracker
+                Pixel-Tracker
               </Link>
             )}
           </div>
