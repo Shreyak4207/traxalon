@@ -110,7 +110,7 @@ export default function Contact() {
     }
   }
 
-  const MAPS_URL = `https://www.google.com/maps/place/SURE+PASS/@12.8766748,74.8415473,19z/data=!3m1!4b1!4m6!3m5!1s0x3ba35b2bfc57f253:0xa31ea1109925b56a!8m2!3d12.8766748!4d74.8415473!16s%2Fg%2F11cs6s4wt4`;
+  const MAPS_URL = `https://www.google.com/maps?q=12.8766748,74.8415473&z=18`;
 
   return (
     <div className="min-h-screen bg-surface text-text-primary overflow-hidden">
@@ -125,7 +125,7 @@ export default function Contact() {
           <div className="inline-flex items-center gap-2 bg-surface-card border border-primary/30 rounded-full px-5 py-2 mb-8">
             <Activity className="w-3 h-3 text-primary flex-shrink-0" />
             <span className="font-mono text-xs text-primary tracking-wider uppercase whitespace-nowrap">
-              Support · Mon-Sat · 9AM-6PM IST
+              Support · 24/7
             </span>
           </div>
           <h1 className="font-display text-5xl md:text-6xl text-text-primary leading-none mb-6 tracking-wider">
@@ -138,7 +138,7 @@ export default function Contact() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-5 gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
 
           <div className="md:col-span-2 flex flex-col gap-4">
             <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 space-y-5">
@@ -163,33 +163,35 @@ export default function Contact() {
               ))}
             </div>
 
-            <div className="bg-surface-elevated border border-primary/20 rounded-2xl overflow-hidden flex-1 flex flex-col">
+            <div className="bg-surface-elevated border border-primary/20 rounded-2xl overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
               <div className="px-4 pt-4 pb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-primary" />
-                  <span className="font-mono text-xs text-primary uppercase tracking-wider">Live Location</span>
+                  <span className="font-mono text-xs text-primary uppercase tracking-wider">Our Location</span>
                 </div>
                 <a href={MAPS_URL} target="_blank" rel="noreferrer"
                   className="inline-flex items-center gap-1 font-mono text-xs text-text-muted hover:text-primary transition-colors">
                   <ExternalLink className="w-3 h-3" /> Open Maps
                 </a>
               </div>
+
               <a href={MAPS_URL} target="_blank" rel="noreferrer"
                 className="relative mx-4 mb-4 rounded-xl overflow-hidden border border-surface-border block"
-                style={{ minHeight: 380, height: "100%" }}>
+                style={{ height: 400 }}>
                 <iframe
                   title="Traxelon Location"
                   width="100%"
-                  height="100%"
+                  height="400"
                   frameBorder="0"
                   style={{
-                    filter: "invert(90%) hue-rotate(180deg) saturate(0.7) brightness(0.85)",
+                    display: "block",
                     pointerEvents: "none",
                   }}
-                  src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d255.30228749418472!2d74.84159297539611!3d12.876787775214574!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba35b2bfc57f253%3A0xa31ea1109925b56a!2sSURE%20PASS!5e0!3m2!1sen!2sin!4v1772877354907!5m2!1sen!2sin`}
+                  src={`https://maps.google.com/maps?q=12.8766748,74.8415473&iwloc=&output=embed`}
                   allowFullScreen
                 />
+
                 <div className="absolute bottom-3 right-3 bg-surface/90 border border-primary/30 rounded-lg px-3 py-1.5 flex items-center gap-1.5 backdrop-blur-sm">
                   <ExternalLink className="w-3 h-3 text-primary" />
                   <span className="font-mono text-xs text-primary">Open in Maps</span>
@@ -247,13 +249,18 @@ export default function Contact() {
                     )}
                   </div>
 
-                  <HCaptcha
-                    sitekey="2c7ab4e4-6cd4-43fa-9416-57f458ea07c6"
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onExpire={() => setCaptchaToken(null)}
-                    ref={hcaptchaRef}
-                    theme="dark"
-                  />
+                  <div className="w-full overflow-hidden">
+                    <div style={{ transform: "scale(0.85)", transformOrigin: "left center" }}
+                      className="md:scale-100">
+                      <HCaptcha
+                        sitekey="2c7ab4e4-6cd4-43fa-9416-57f458ea07c6"
+                        onVerify={(token) => setCaptchaToken(token)}
+                        onExpire={() => setCaptchaToken(null)}
+                        ref={hcaptchaRef}
+                        theme="dark"
+                      />
+                    </div>
+                  </div>
 
                   <button type="submit" disabled={sending}
                     className="w-full px-6 py-3.5 bg-primary text-surface font-body font-bold rounded-lg hover:bg-primary-dark transition-all shadow-glow flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
@@ -261,20 +268,40 @@ export default function Contact() {
                     {sending ? "Sending..." : "Send Message"}
                   </button>
 
-                  <div className="flex items-start gap-3 bg-surface border border-surface-border rounded-xl px-4 py-3">
+                  {/* <div className="flex items-start gap-3 bg-surface border border-surface-border rounded-xl px-4 py-3">
                     <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <p className="font-body text-xs text-text-muted leading-relaxed">
                       All communications are encrypted and logged for security purposes.
                       Please use your official government email when contacting us.
                     </p>
-                  </div>
+                  </div> */}
+                  
                 </form>
               )}
             </div>
           </div>
         </div>
-      </div>
+        <div className="max-w-5xl mx-auto ">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+    
+    {/* LEFT CARD */}
+    {/* RIGHT CARD */}
 
+          </div>
+
+          {/* ✅ NOTICE — PERFECT ALIGNMENT */}
+       <div className="mt-6">
+  <div className="flex items-start gap-3 bg-surface border border-surface-border rounded-xl px-4 py-3 w-full">
+    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+    <p className="font-body text-xs text-text-muted leading-relaxed text-center w-full">
+      All communications are encrypted and securely logged for security purposes always.
+Please use your official email when contacting us for verification purposes.
+    </p>
+  </div>
+</div>
+        </div>
+      </div>
+     
       <footer className="border-t border-surface-border py-8 px-6 mt-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -283,7 +310,9 @@ export default function Contact() {
               TRAX<span className="text-primary">ELON</span>
             </span>
           </div>
-          <p className="font-body text-xs text-text-muted">© 2026 Traxelon. Authorized law enforcement use only.</p>
+          <p className="font-body text-xs text-text-muted">
+            © 2026 Traxelon · A project of <a href="https://www.torsecure.com/" target="_blank" className="font-body text-xs text-text-muted hover:text-primary transition-colors">TorSecure</a>.
+          </p>
           <div className="flex gap-6">
             <Link to="/" className="font-body text-xs text-text-muted hover:text-primary transition-colors">Home</Link>
             <Link to="/about" className="font-body text-xs text-text-muted hover:text-primary transition-colors">About</Link>
