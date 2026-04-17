@@ -72,6 +72,7 @@ export async function addCredits(uid, amount) {
 }
 
 // -- PIXEL TRACKING ------------------------------------------------------------
+// Single clean version — correct URL /api/links/pixel/
 
 export async function createPixel(uid, label) {
     const token = generateToken();
@@ -104,7 +105,8 @@ export async function recordPixelHit(token, hitData) {
 
     await docRef.update({
         totalOpens: admin.firestore.FieldValue.increment(1),
-        uniqueIPs: isRepeatOpen ? uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),
+        uniqueIPs: isRepeatOpen ?
+            uniqueIPs : admin.firestore.FieldValue.arrayUnion(hitData.ip),
         hits: admin.firestore.FieldValue.arrayUnion({
             ...hitData,
             isRepeatOpen,
