@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 import {
   Copy, CheckCircle, Eye, Globe, Mail, Plus,
   ChevronDown, ChevronUp, Link2, ExternalLink,
@@ -12,13 +12,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001"
 
 export default function PixelTracker() {
   const { currentUser } = useAuth();
-  const [mainTab, setMainTab] = useState("pixel"); // "pixel" | "url"
+  const [mainTab, setMainTab] = useState("pixel");
 
   return (
     <div className="min-h-screen bg-surface pt-16 text-text-primary">
       <div className="max-w-5xl mx-auto px-4 py-8">
-
-        {/* Page Header */}
         <div className="mb-6">
           <h1 className="font-display text-4xl tracking-wider">
             {mainTab === "pixel"
@@ -34,14 +32,11 @@ export default function PixelTracker() {
           </p>
         </div>
 
-        {/* Main Tab Switcher */}
         <div className="flex gap-2 mb-8 bg-surface-card border border-surface-border rounded-2xl p-1.5 w-fit">
           <button
             onClick={() => setMainTab("pixel")}
             className={`px-6 py-2.5 rounded-xl font-body text-sm font-semibold transition-all ${
-              mainTab === "pixel"
-                ? "bg-primary text-surface shadow-glow"
-                : "text-text-muted hover:text-text-primary"
+              mainTab === "pixel" ? "bg-primary text-surface shadow-glow" : "text-text-muted hover:text-text-primary"
             }`}
           >
             👁️ Pixel Tracker
@@ -49,16 +44,13 @@ export default function PixelTracker() {
           <button
             onClick={() => setMainTab("url")}
             className={`px-6 py-2.5 rounded-xl font-body text-sm font-semibold transition-all ${
-              mainTab === "url"
-                ? "bg-primary text-surface shadow-glow"
-                : "text-text-muted hover:text-text-primary"
+              mainTab === "url" ? "bg-primary text-surface shadow-glow" : "text-text-muted hover:text-text-primary"
             }`}
           >
             🔗 URL Tracker
           </button>
         </div>
 
-        {/* Tab Content */}
         {mainTab === "pixel"
           ? <PixelTab currentUser={currentUser} />
           : <UrlTab currentUser={currentUser} />
@@ -129,7 +121,6 @@ function PixelTab({ currentUser }) {
 
   return (
     <>
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {[
           { label: "Total Pixels", value: pixels.length, icon: <Eye className="w-4 h-4" /> },
@@ -143,22 +134,20 @@ function PixelTab({ currentUser }) {
         ))}
       </div>
 
-      {/* Comparison info */}
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-6">
-        <p className="font-body text-xs text-primary font-semibold uppercase tracking-wider mb-2">📌 What pixel captures vs URL tracker</p>
+        <p className="font-body text-xs text-primary font-semibold uppercase tracking-wider mb-2">📌 Pixel vs URL Tracker</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="font-body text-xs text-text-muted mb-1 font-semibold">Pixel (on email open)</p>
-            <p className="font-body text-xs text-text-secondary">IP address, city, country, ISP, timezone, email client, proxy/VPN, repeat opens</p>
+            <p className="font-body text-xs text-text-secondary">IP, city, country, ISP, timezone, email client, proxy/VPN, repeat opens — fires automatically</p>
           </div>
           <div>
             <p className="font-body text-xs text-text-muted mb-1 font-semibold">URL Tracker (on click)</p>
-            <p className="font-body text-xs text-text-secondary">All of above + GPS location, browser, OS, device, screen, battery, 300+ data points</p>
+            <p className="font-body text-xs text-text-secondary">All of above + GPS, browser, OS, device, screen, battery, 300+ data points</p>
           </div>
         </div>
       </div>
 
-      {/* Create Pixel */}
       <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 mb-6">
         <h2 className="font-display text-xl tracking-wider mb-1">CREATE <span className="text-primary">PIXEL</span></h2>
         <p className="font-body text-xs text-text-muted mb-4">Free — no credits needed. Fires on email open, no click required.</p>
@@ -193,7 +182,6 @@ function PixelTab({ currentUser }) {
         </form>
       </div>
 
-      {/* Pixel List */}
       <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6">
         <h2 className="font-display text-xl tracking-wider mb-6">YOUR <span className="text-primary">PIXELS</span></h2>
 
@@ -284,7 +272,6 @@ function PixelTab({ currentUser }) {
                       </p>
                     </div>
 
-                    {/* Hit log */}
                     {pixel.hits?.length > 0 ? (
                       <div>
                         <p className="font-body text-xs text-primary uppercase tracking-wider mb-3 pb-1 border-b border-surface-border">
@@ -317,11 +304,19 @@ function PixelTab({ currentUser }) {
                                     <DataItem label="Proxy/VPN" value={hit.isProxy != null ? String(hit.isProxy) : null} />
                                     <DataItem label="Hosting" value={hit.isHosting != null ? String(hit.isHosting) : null} />
                                     <DataItem label="Mobile Net" value={hit.isMobileNetwork != null ? String(hit.isMobileNetwork) : null} />
+                                    <DataItem label="Browser" value={hit.browser} />
+                                    <DataItem label="Browser Ver" value={hit.browserVersion} />
+                                    <DataItem label="OS" value={hit.os} />
+                                    <DataItem label="Device" value={hit.device} />
+                                    <DataItem label="Device Brand" value={hit.deviceBrand} />
                                     <DataItem label="Language" value={hit.acceptLanguage} />
                                     <DataItem label="Referrer" value={hit.referer} />
+                                    <DataItem label="DNT" value={hit.dnt} />
+                                    <DataItem label="Sec-CH-UA" value={hit.secChUa} />
+                                    <DataItem label="Platform" value={hit.secChUaPlatform} />
                                   </div>
                                   {hit.lat && hit.lon && (
-                                    
+                                  <a  
                                       href={`https://www.google.com/maps?q=${hit.lat},${hit.lon}`}
                                       target="_blank"
                                       rel="noreferrer"
@@ -376,7 +371,6 @@ function UrlTab({ currentUser }) {
   const [openLink, setOpenLink] = useState(null);
   const [liveCaptures, setLiveCaptures] = useState({});
 
-  // Load tracking links from Firestore
   useEffect(() => {
     if (!currentUser) return;
     const q = query(collection(db, "trackingLinks"), where("uid", "==", currentUser.uid));
@@ -391,11 +385,11 @@ function UrlTab({ currentUser }) {
     return unsub;
   }, [currentUser]);
 
-  // Live captures for open link
+  // ── FIXED: replaced require() with proper doc import ──────────────────────
   useEffect(() => {
     if (!openLink) return;
     const unsub = onSnapshot(
-      require("firebase/firestore").doc(db, "trackingLinks", openLink),
+      doc(db, "trackingLinks", openLink),
       (snap) => {
         if (snap.exists()) {
           setLiveCaptures(prev => ({ ...prev, [openLink]: snap.data().captures || [] }));
@@ -445,17 +439,14 @@ function UrlTab({ currentUser }) {
 
   return (
     <>
-      {/* Info banner */}
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-6">
         <p className="font-body text-xs text-primary font-semibold uppercase tracking-wider mb-1">🔗 How URL Tracker works</p>
         <p className="font-body text-xs text-text-secondary">
           Generate a tracking URL with a destination site. Paste it in an email as a clickable link.
-          When target clicks → full device info + GPS captured → they get redirected to destination.
-          Target never sees Traxelon.
+          When target clicks → full device info + GPS captured → redirected to destination. Target never sees Traxelon.
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {[
           { label: "Total Links", value: links.length, icon: <Link2 className="w-4 h-4" /> },
@@ -469,11 +460,10 @@ function UrlTab({ currentUser }) {
         ))}
       </div>
 
-      {/* Generate URL */}
       <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6 mb-6">
         <h2 className="font-display text-xl tracking-wider mb-1">GENERATE <span className="text-primary">TRACKING URL</span></h2>
         <p className="font-body text-xs text-text-muted mb-4">
-          Uses 1 credit. Target clicks link → 300+ device details + GPS captured → redirected to your destination.
+          Uses 1 credit. Target clicks → 300+ device details + GPS → redirected to destination.
         </p>
 
         {error && (
@@ -501,11 +491,10 @@ function UrlTab({ currentUser }) {
               </button>
             </div>
             <p className="font-body text-xs text-text-muted mt-2">
-              ↑ Paste this URL in your email as a clickable link. When target clicks, full device capture happens silently.
+              ↑ Paste in email as a clickable link. When target clicks, full device capture happens silently.
             </p>
-            {/* Email template */}
             <div className="mt-3 bg-surface border border-surface-border rounded-lg p-3">
-              <p className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">Ready-to-use email link HTML</p>
+              <p className="font-body text-xs text-text-muted uppercase tracking-wider mb-2">Ready-to-use HTML link</p>
               <pre className="font-mono text-xs text-text-secondary break-all whitespace-pre-wrap">
                 {`<a href="${success}" style="color:#1a73e8;">Click here to view the document</a>`}
               </pre>
@@ -556,14 +545,13 @@ function UrlTab({ currentUser }) {
         </form>
       </div>
 
-      {/* Links list */}
       <div className="bg-surface-elevated border border-surface-border rounded-2xl p-6">
         <h2 className="font-display text-xl tracking-wider mb-6">YOUR TRACKING <span className="text-primary">URLS</span></h2>
 
         {links.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🔗</div>
-            <p className="font-body text-text-muted">No tracking URLs generated yet</p>
+            <p className="font-body text-text-muted">No tracking URLs yet</p>
             <p className="font-body text-xs text-text-muted mt-1">Generate your first URL above</p>
           </div>
         ) : (
@@ -648,13 +636,10 @@ function UrlTab({ currentUser }) {
                                     {capture.capturedAt ? new Date(capture.capturedAt).toLocaleString("en-IN") : ""}
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {capture.gpsLat && (
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-mono">📍 GPS</span>
-                                  )}
-                                  {capture.incognito === "true" && (
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">🕵️ Incognito</span>
-                                  )}
+                                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                                  {capture.gpsLat && <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-mono">📍 GPS</span>}
+                                  {capture.incognito === "true" && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">🕵️ Incognito</span>}
+                                  {capture.isProxy && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-mono">🛡 VPN</span>}
                                 </div>
                               </div>
 
@@ -683,7 +668,6 @@ function UrlTab({ currentUser }) {
                                 <DataItem label="WebRTC Local IP" value={capture.webrtcLocalIP} />
                               </div>
 
-                              {/* GPS section */}
                               {capture.gpsLat && capture.gpsLon && (
                                 <div className="mt-3 pt-3 border-t border-surface-border">
                                   <p className="font-body text-xs text-primary uppercase tracking-wider mb-2">📍 GPS Location</p>
@@ -697,7 +681,7 @@ function UrlTab({ currentUser }) {
                                     <DataItem label="GPS City" value={capture.gpsCity} />
                                     <DataItem label="GPS State" value={capture.gpsState} />
                                   </div>
-                                  
+                                  <a
                                     href={`https://www.google.com/maps?q=${capture.gpsLat},${capture.gpsLon}`}
                                     target="_blank"
                                     rel="noreferrer"
